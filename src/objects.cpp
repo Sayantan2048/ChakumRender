@@ -1,0 +1,14 @@
+#include "geometryPrimitives.h"
+#include "materialTypes.h"
+#include "objects.h"
+
+int nSpheres = 7;
+Sphere sphereList[] = {
+  Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25, .25), 1.0, lambertian),
+  Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25, .25, .75), 1.0, lambertian),
+  Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(.75, .75, .75), 1.0, lambertian),
+  Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, lambertian),
+  Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(.75, .75, .75), 1.0, lambertian),
+  Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, lambertian),
+  Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian)
+};

@@ -1,0 +1,15 @@
+1. Print the name of variable CFLAGS:
+$(info $(CFLAGS)) or @echo $(CFLAGS)
+
+2. Print a string
+$(info BAGOM BAGOM BAGOM) or @echo BAGOM BAGOM
+
+3. Surprise, the above statement will execute only once. So, if you want to print a statement everytime a makefile is executed, you need to:
+.PHONY: run
+run:
+	$(info BAGOM BAGOM BAGOM) or @echo BAGOM BAGOM
+	
+Note: Phony targets are not actual file. Actual files targets are comiled only when their content is changed. If you declare a target Phony, it means it will be
+executed without any constraints.
+
+
