@@ -5,4 +5,7 @@
 extern int nSpheres;
 extern Sphere sphereList[];
 
+extern int nTriangles;
+extern Triangle triangleList[];
+
 #endif

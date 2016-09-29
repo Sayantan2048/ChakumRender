@@ -13,7 +13,19 @@ struct PointSource {
   }
 };
 
-extern PointSource pSources[];
-extern Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList);
+struct VolumeSource {
+  Sphere p; //This sphere is not visible, if you want a visible sphere, put the sphere used in the constructor argument in the object list as well.
+  Vec radiance;
+  VolumeSource(Sphere p_, Vec r_): p(p_), radiance(r_) {
+    double r = p_.r * (1.0 + eps);
+    p = p_;
+    p.r = r;
+  }
+private:
+  static const double eps = 0.001;
+};
+
+extern Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList);
+extern Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList);
 
 #endif

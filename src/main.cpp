@@ -4,9 +4,16 @@
 #include "mathPrimitives.h"
 #include "materialTypes.h"
 #include "geometryPrimitives.h"
+#include "random.h"
 #include "objects.h"
 #include "shader.h"
 #include <cmath>
+#include <ctime>
+
+#define ANTIALIASING 1
+
+double x_alias[] = {0.34, 0.86, 0.20, 0.86, 0.66, 0.34, 0.20, 0.66};
+double y_alias[] = {0.20, 0.66, 0.66, 0.34, 0.86, 0.86, 0.34, 0.20};
 
 // clamp x between 0 and 1.
 inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
@@ -33,10 +40,13 @@ int main(int argc, char *argv[]) {
       // Start from top left to bottm right of the screen.
       int idx = (h - y - 1) * w + x;
       pixelValue = Vec();
-      // Shoot ray from camera thur each pixel: Computed as: camera direction +/- deviation from camera direction in terms of pixel pitch.
-      Vec cameraRayDir = cx * ( double(x)/w - .5) + cy * ( double(y)/h - .5) + camera.d;
-      // Find color of intersection. In case no intersection is found color the pixel black.
-      pixelValue = shade(Ray(camera.o, cameraRayDir.norm()));
+      for (int k = 0; k < ANTIALIASING; k++) {
+	// Shoot ray from camera thur each pixel: Computed as: camera direction +/- deviation from camera direction in terms of pixel pitch.
+	Vec cameraRayDir = cx * ( (double(x) + x_alias[k])/w - .5) + cy * ((double(y) + y_alias[k])/h - .5) + camera.d;
+	// Find color of intersection. In case no intersection is found color the pixel black.
+	pixelValue = pixelValue + shade(Ray(camera.o, cameraRayDir.norm()));
+      }
+      pixelValue = pixelValue / ANTIALIASING;
       // Clamp the rgb values.
       pixelColors[idx] = Vec(clamp(pixelValue.x), clamp(pixelValue.y), clamp(pixelValue.z));
     }

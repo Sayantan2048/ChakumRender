@@ -12,3 +12,10 @@ Sphere sphereList[] = {
   Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, lambertian),
   Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian)
 };
+
+int nTriangles = 2;
+
+Triangle triangleList[] = {
+  Triangle(Vec(27, 16.5, 47),  Vec(73, 16.5, 78), Vec(55, 50.5, 66), Vec(0.9, 0.9, 0.9), 0.9, lambertian),
+  Triangle(Vec(59, 16.5, 99),  Vec(73, 16.5, 78), Vec(55, 50.5, 66), Vec(0.9, 0.9, 0.9), 0.9, lambertian)
+};

@@ -1,6 +1,7 @@
 #if !defined(mathPrimitives_h__)
 #define mathPrimitives_h__
 #define PI 3.14159265
+#define INF 1e20
 
 struct Vec {
   double x, y, z;
