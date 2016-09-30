@@ -31,39 +31,47 @@ int SphericalSampler::initSamples() {
     return 0;
 }
 
-void SphericalSampler::getSphericalVolumeSamples(Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getSphericalVolumeSamples(Vec x, int nSamples, Vec *store) {
     seedMT(clock() & 0xFFFFFFFF);
     int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
       store[j] = sampleVolume[i] + x;
+
+    return 4.0 * PI /3.0;
 }
 
-void SphericalSampler::getSphericalSurfaceSamples(Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getSphericalSurfaceSamples(Vec x, int nSamples, Vec *store) {
     seedMT(clock() & 0xFFFFFFFF);
     int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
       store[j] = sampleSurface[i] + x;
+
+    return 4 * PI;
 }
 
-void SphericalSampler::getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store) {
     seedMT(clock() & 0xFFFFFFFF);
     int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
       store[j] = n.dot(sampleVolume[i]) >= 0? x+sampleVolume[i] : x-sampleSurface[i];
+
+    return 2.0 * PI / 3.0;
 }
 
-void SphericalSampler::getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *store) {
     seedMT(clock() & 0xFFFFFFFF);
     int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
       store[j] = n.dot(sampleSurface[i]) >= 0? x+sampleSurface[i] : x-sampleSurface[i];
+
+    return 2.0 * PI;
 }
 
-void SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec *store) {
     seedMT(clock() & 0xFFFFFFFF);
 
     double sx, sy, sz;
@@ -79,6 +87,8 @@ void SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec
 	i++;
       }
     }
+
+    return 2.0 * PI;
 }
 
 void SphericalSampler::getDistribution(Vec n, Vec x, int nSamples, Vec *samples) {

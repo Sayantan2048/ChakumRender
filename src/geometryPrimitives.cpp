@@ -38,8 +38,6 @@ double Triangle::intersect(const Ray &ray, Vec &N) const {
   double raydotn = ray.d.dot(n);
   double t;
 
-  if (raydotn*raydotn <= eps) return INF;
-
   N = n;
 
   //For trangle we have two direction for normals, I choose the one which pointing towards ray.o and in opposite direction to ray.d.
@@ -47,6 +45,8 @@ double Triangle::intersect(const Ray &ray, Vec &N) const {
     N = n * -1.0;
     raydotn = -raydotn;
   }
+
+  if (raydotn*raydotn <= eps) return INF;
 
   t = ((A - ray.o).dot(N))/raydotn;
 

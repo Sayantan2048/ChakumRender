@@ -9,17 +9,19 @@
 
 int nPointSources = 0;
 PointSource pSources[] = {
+  PointSource(Vec(50, 10.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(50, 68.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(50, 40.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(50, 28.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(73, 16.6 - .27, 78), Vec(40000.0, 40000.0, 40000.0))
 };
 
-int nVolumeSources = 2;
+int nVolumeSources = 1;
 
 VolumeSource vSources[] = {
-  VolumeSource(Sphere(10,  Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(10.0, 0.0, 0.0)),
-  VolumeSource(Sphere(10,  Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 10.0))
+ VolumeSource(Sphere(10, Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
+ //VolumeSource(Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(40000.0, 0.0, 0.0)),
+ //VolumeSource(Sphere(10.5, Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
 };
 
 Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList) {
@@ -44,6 +46,7 @@ Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, Primitive
     if (shadow(rr, (pSources[i].p - x).length()) < 0.5) {
       continue;
     }
+
     cosine = rr.d.dot(n);
 
     if (cosine < 0) {
@@ -75,10 +78,12 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
   static Vec samples[nSAMPLES] = {0};
 
   // test for convex or concave as seen from a point.
-  if (r.d.dot(n) >= 0)
+  if (r.d.dot(n) >= 0) {
       convex = 0;
+  }
 
-  SphericalSampler::getHemiSurfaceSamples(convex?n:(n*-1.0), x, SAMPLES, samples);
+  // returns 1/pdf.
+  double pdf = SphericalSampler::getHemiSurfaceSamples(convex?n:(n*-1.0), x, SAMPLES, samples);
   Vec sumLight = Vec();
   rr.o = x + n * (convex?eps:-eps);
 
@@ -94,15 +99,15 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
       if (d >= INF)
 	continue;
 
-      if (shadow(rr, d) < 0.5)
-	continue;
+      //if (shadow(rr, d) < 0.5)
+	//continue;
 
       cosine = rr.d.dot(n);
 
       if (cosine < 0) {
 	cosine = -cosine;
 	if (convex) { // This code colors the dark side of an object black.
-	continue;
+	  continue;
 	}
       }
 
@@ -115,7 +120,7 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
       /* TODO: ADD BRDF FOR OTHER PrimitiveTypes */
       sum += (cosine * brdf);
     }
-    sumLight = sumLight + vSources[j].radiance * ( 2.0 * PI * sum/SAMPLES);
+    sumLight = sumLight + vSources[j].radiance * ( pdf * sum/SAMPLES);
   }
   return sumLight;
 }

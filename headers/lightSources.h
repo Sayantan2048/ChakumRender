@@ -7,6 +7,7 @@ struct PointSource {
   Vec p;
   Vec power;
   PointSource(Vec p_, Vec pw_): p(p_), power(pw_){}
+  // At any point x
   Vec radiance(Vec x) {
     double sqlen = (p - x).dot(p-x);
     return power / (4.0 * PI * sqlen);
@@ -14,13 +15,24 @@ struct PointSource {
 };
 
 struct VolumeSource {
-  Sphere p; //This sphere is not visible, if you want a visible sphere, put the sphere used in the constructor argument in the object list as well.
   Vec radiance;
-  VolumeSource(Sphere p_, Vec r_): p(p_), radiance(r_) {
+  Sphere p; //This sphere is not visible, if you want a visible sphere, put the sphere used in the constructor argument in the object list as well.
+  Vec power;
+  VolumeSource(Sphere p_, Vec pw_): p(p_), power(pw_) {
     double r = p_.r * (1.0 + eps);
     p = p_;
     p.r = r;
+    radiance = power / (4 * PI * p.r * p.r);
   }
+
+  VolumeSource(Vec r_, Sphere p_): radiance(r_), p(p_) {
+    double r = p_.r * (1.0 + eps);
+    p = p_;
+    p.r = r;
+    power = radiance * ( 4 * PI * p.r * p.r);
+  }
+
+
 private:
   static const double eps = 0.001;
 };

@@ -15,11 +15,11 @@ class SphericalSampler {
 
   public:
   // Vec n is direction of normal and Vec x is position of center.
-  static void getSphericalVolumeSamples(Vec x, int nSamples, Vec *store);
-  static void getSphericalSurfaceSamples(Vec x, int nSamples, Vec *store);
-  static void getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *store);
-  static void getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec *store);
-  static void getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store);
+  static double getSphericalVolumeSamples(Vec x, int nSamples, Vec *store);
+  static double getSphericalSurfaceSamples(Vec x, int nSamples, Vec *store);
+  static double getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *store);
+  static double getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec *store);
+  static double getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store);
   static void getDistribution(Vec n, Vec x, int nSamples, Vec *samples);
 };
 

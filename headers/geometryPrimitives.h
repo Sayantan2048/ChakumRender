@@ -48,12 +48,13 @@ public:
 	  A = A_;
 	  B = B_;
 	  C = C_;
-	  c = c_;
 	  reflectance = ref_;
 	  m = m_;
 	  n = (B - A);
-	  n = (C - A)%n;
+	  c = (C - A);
+	  n = c%n;
 	  n.norm();
+	  c = c_;
 	}
   double intersect(const Ray &ray, Vec &N) const;
   double brdf(Vec wi, Vec wr, Vec x) const;
