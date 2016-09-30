@@ -99,8 +99,8 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
       if (d >= INF)
 	continue;
 
-      //if (shadow(rr, d) < 0.5)
-	//continue;
+      if (shadow(rr, d) < 0.5)
+	continue;
 
       cosine = rr.d.dot(n);
 
