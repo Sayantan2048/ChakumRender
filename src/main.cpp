@@ -69,3 +69,7 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+/*
+int main() {
+  SphericalSampler::getArcSurfaceSamples(Vec(1.0, -1.0, 1.0), Vec(), PI/15.0, 20);
+}*/

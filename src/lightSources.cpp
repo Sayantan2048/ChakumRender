@@ -3,13 +3,15 @@
 #include "shader.h"
 #include "geometryPrimitives.h"
 #include <cstdio>
+#include <cmath>
 #include "domainSampler.h"
 
-#define SAMPLES (nSAMPLES)
+#define SAMPLES 		(20)
+#define SOLID_IMP_SAMPLE 	1
 
 int nPointSources = 0;
 PointSource pSources[] = {
-  PointSource(Vec(50, 10.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
+  //PointSource(Vec(50, 10.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(50, 68.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(50, 40.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(50, 28.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
@@ -19,8 +21,8 @@ PointSource pSources[] = {
 int nVolumeSources = 1;
 
 VolumeSource vSources[] = {
- VolumeSource(Sphere(10, Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
- //VolumeSource(Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(40000.0, 0.0, 0.0)),
+ //VolumeSource(Sphere(10, Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
+ VolumeSource(Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(40000.0/3, 40000.0/3, 40000.0/3)),
  //VolumeSource(Sphere(10.5, Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
 };
 
@@ -69,13 +71,15 @@ Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, Primitive
   return sumLight;
 }
 
+#if !SOLID_IMP_SAMPLE
+
 Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList) {
   int convex = 1; // check whether the surface is convex or not from the direction of viewing
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  static Vec samples[nSAMPLES] = {0};
+  static Vec samples[SAMPLES] = {0};
 
   // test for convex or concave as seen from a point.
   if (r.d.dot(n) >= 0) {
@@ -124,3 +128,63 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
   }
   return sumLight;
 }
+
+#else
+Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList) {
+  int convex = 1; // check whether the surface is convex or not from the direction of viewing
+  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
+  double cosine = 0;
+  double eps = 1e-08;
+  double brdf = 0;
+  static Vec samples[nSAMPLES] = {0};
+
+  // test for convex or concave as seen from a point.
+  if (r.d.dot(n) >= 0) {
+      convex = 0;
+  }
+
+  Vec sumLight = Vec();
+  rr.o = x + n * (convex?eps:-eps);
+
+  for (int j = 0; j < nVolumeSources; j++) {
+    double sum = 0;
+    Vec w = vSources[j].p.p - x;
+    // returns 1/pdf.
+    double pdf = SphericalSampler::getArcSurfaceSamples(w, x, asin(vSources[j].p.r/w.length()), SAMPLES - 1, samples);
+    samples[SAMPLES - 1] = x + w.norm();
+    for (int i = 0; i < SAMPLES; i++) {
+      double d;
+
+      rr.d = (samples[i] - x);
+
+      d = vSources[j].p.intersect(rr);
+
+      if (d >= INF)
+	continue;
+
+      if (shadow(rr, d) < 0.5)
+	continue;
+
+      cosine = rr.d.dot(n);
+
+      if (cosine < 0) {
+	cosine = -cosine;
+	if (convex) { // This code colors the dark side of an object black.
+	  continue;
+	}
+      }
+
+      if (m == sphere)
+	brdf = sphereList[id].brdf(rr.d, rr.d, rr.d);
+      else if (m == triangle)
+	brdf = triangleList[id].brdf(rr.d, rr.d, rr.d);
+      else
+	fprintf(stderr, "PrimitiveType not found in getLightFromPointSources.\n");
+      /* TODO: ADD BRDF FOR OTHER PrimitiveTypes */
+      sum += (cosine * brdf);
+    }
+    sumLight = sumLight + vSources[j].radiance * ( pdf * sum/SAMPLES);
+  }
+  return sumLight;
+}
+#endif

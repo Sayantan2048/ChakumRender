@@ -91,6 +91,129 @@ double SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, V
     return 2.0 * PI;
 }
 
+#define DEBUG_ARCSS 0
+//Solid angle imortance sampling!!
+//Sample around w as axis, centered at x with sample points making maximum angle of theta_max with w.
+double SphericalSampler::getArcSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store) {
+  seedMT(clock() & 0xFFFFFFFF);
+  double eps = 1e-14;
+
+  w.norm();
+  double eita = w.x * w.x + w.y * w.y;
+  double alpha = w.z * w.z + eita; // Parabola opens upwards since alpha >= 0.
+
+  for (int i = 0; i < nSamples;) {
+    double theta = randomMTD(theta_max/1000.0, theta_max);
+    double delta1 = cos(theta);
+
+    double beta = -2.0 * delta1 * w.z;
+    double gamma = delta1 * delta1 - eita;
+
+    double disc = beta * beta - 4 * alpha * gamma;
+
+    if (disc * disc < eps)  {// discriminant almost zero, degenerate case
+      double o = -beta / (2 * alpha);
+
+      double r = sqrt(1 - o*o);
+
+      double m = randomMTD(0.0, r);
+      double n1 = sqrt (r * r - m * m);
+      double n2 = -n1;
+
+#if DEBUG_ARCSS
+      fprintf(stdout, "C1:%f %f %f %f %f %f\n", m , n1, o, (Vec(m, n1, o).norm()).dot(w), delta1, theta);
+      fprintf(stdout, "C2:%f %f %f %f %f %f\n", m , n2, o, (Vec(m, n2, o).norm()).dot(w), delta1, theta);
+#endif
+      store[i] = x + Vec(m, n1, o).norm();
+      store[i + 1] = x + Vec(m, n2, o).norm();
+
+      i += 2;
+    }
+    else if (disc > 0) {
+      double o1, o2;
+      if (beta >= 0) {
+        double temp = -(beta + sqrt(disc));
+        o1 = temp / (2.0 * alpha);
+        o2 = (2 * gamma) / temp;
+      }
+      else {
+        double temp = (-beta) + sqrt(disc);
+        o1 = (2 * gamma) / temp;
+        o2 = temp / (2 * alpha);
+      }
+
+      double eps2 = (o2 - o1) / 1000.0;
+      double o = randomMTD(o1 + eps2, o2 - eps2); //if o = o1 or o2 then disc1 is zero. In this case the line is tangential to the circle.
+
+      double sdelta1 = 1 - o * o;
+      double sdelta2 = delta1 - o * w.z;
+      double alpha1 = w.x * w.x + w.y * w.y;
+      double beta1 = -2.0 * w.y * sdelta2;
+      double gamma1 = sdelta2 * sdelta2 - w.x * w.x *sdelta1;
+
+      double disc1 = beta1 * beta1 - 4 * alpha1 * gamma1;
+      double n1, n2;
+      if (disc1 * disc1 < eps) {
+        n1 = n2 = -beta1 / (2 * alpha1);
+        //if (w.x * w.x < eps * 100000) { // Plane parallel to X axis, i.e if w.x = 0, then disc1 is 0.
+	  double m1, m2;
+	  m1 = sqrt(sdelta1 - n1 * n1);
+	  m2 = -m1;
+#if DEBUG_ARCSS
+	  fprintf(stdout, "D1:%f %f %f %f %f %f\n", m1 , n1, o, (Vec(m1, n1, o).norm()).dot(w), delta1, theta);
+          fprintf(stdout, "D2:%f %f %f %f %f %f\n", m2 , n2, o, (Vec(m2, n2, o).norm()).dot(w), delta1, theta);
+#endif
+	  store[i] = x + Vec(m1, n1, o).norm();
+	  store[i + 1] = x + Vec(m2, n2, o).norm();
+	  i += 2;
+        //}
+        // Other reason for disc1 is 0 because o = o1 or o = o2. But the way o is generated, such condition will never happen!!
+      }
+      else if (beta1 >= 0) {
+        double temp = -(beta1 + sqrt(disc1));
+        double m1, m2;
+        n1 = temp / (2.0 * alpha1);
+        n2 = (2 * gamma1) / temp;
+
+        m1 = (sdelta2 - n1 * w.y) / w.x;
+        m2 = (sdelta2 - n2 * w.y) / w.x;
+#if DEBUG_ARCSS
+        fprintf(stdout, "A1:%f %f %f %f %f %f\n", m1 , n1, o, (Vec(m1, n1, o).norm()).dot(w), delta1, theta);
+        fprintf(stdout, "A2:%f %f %f %f %f %f\n", m2 , n2, o, (Vec(m2, n2, o).norm()).dot(w), delta1, theta);
+#endif
+	store[i] = x + Vec(m1, n1, o).norm();
+	store[i + 1] = x + Vec(m2, n2, o).norm();
+
+	i += 2;
+      }
+      else {
+        double temp = (-beta1) + sqrt(disc1);
+        double m1, m2;
+        n1 = (2 * gamma1) / temp;
+        n2 = temp / (2 * alpha1);
+
+        m1 = (sdelta2 - n1 * w.y) / w.x;
+        m2 = (sdelta2 - n2 * w.y) / w.x;
+#if DEBUG_ARCSS
+        fprintf(stdout, "B1:%f %f %f %f %f %f\n", m1, n1, o, (Vec(m1, n1, o).norm()).dot(w), delta1, theta);
+        fprintf(stdout, "B2:%f %f %f %f %f %f\n", m2, n2, o, (Vec(m2, n2, o).norm()).dot(w), delta1, theta);
+#endif
+	store[i] = x + Vec(m1, n1, o).norm();
+	store[i + 1] = x + Vec(m2, n2, o).norm();
+
+	i += 2;
+      }
+    }
+#if DEBUG_ARCSS
+    fprintf(stdout, "%f %f %f %f\n", disc, w.x, w.y, w.z);
+#endif
+  }
+
+  // Use Cap-hat theorem to return 1/pdf which is essentially the area of spherical cap subtended by the light.
+  return 2.0 * PI * (1 - cos(theta_max));
+
+}
+
 void SphericalSampler::getDistribution(Vec n, Vec x, int nSamples, Vec *samples) {
     int *histogramElevation = new int[181]; // 180 degrees
     int *histogramAzmuth = new int[361]; // 360 degrees
