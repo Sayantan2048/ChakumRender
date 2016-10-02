@@ -20,7 +20,8 @@ class SphericalSampler {
   static double getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *store);
   static double getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec *store);
   static double getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store);
-  static double getArcSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store);
+  static double getSolidSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store);
+  static double getLightSurfaceSample(Vec c, double r, Vec x, int nSamples, Vec *store);
   static void getDistribution(Vec n, Vec x, int nSamples, Vec *samples);
 };
 

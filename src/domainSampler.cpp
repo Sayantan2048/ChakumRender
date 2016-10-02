@@ -91,10 +91,22 @@ double SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, V
     return 2.0 * PI;
 }
 
+// Importance sampling as per visible surface of light from a point x.
+double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamples, Vec *store) {
+    seedMT(clock() & 0xFFFFFFFF);
+    int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
+    Vec dir = (x - c).norm();
+    // 0xFFFFFFF0 gives better alignment and performance!!
+    for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
+      store[j] = dir.dot(sampleSurface[i]) >= 0? c + sampleSurface[i] * r : c - sampleSurface[i] * r;
+
+    return 2 * PI * r * r;
+}
+
 #define DEBUG_ARCSS 0
 //Solid angle imortance sampling!!
 //Sample around w as axis, centered at x with sample points making maximum angle of theta_max with w.
-double SphericalSampler::getArcSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store) {
+double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store) {
   seedMT(clock() & 0xFFFFFFFF);
   double eps = 1e-14;
 
@@ -131,7 +143,7 @@ double SphericalSampler::getArcSurfaceSamples(Vec w, Vec x, double theta_max, in
     }
     else if (disc > 0) {
       double o1, o2;
-      if (beta >= 0) {
+      if (beta >= 0) { // This is more numerically stable than directly computing two roots.
         double temp = -(beta + sqrt(disc));
         o1 = temp / (2.0 * alpha);
         o2 = (2 * gamma) / temp;
