@@ -22,14 +22,14 @@ struct VolumeSource {
     double r = p_.r * (1.0 + eps);
     p = p_;
     p.r = r;
-    radiance = power / (4 * PI * p.r * p.r);
+    radiance = power / (4 * PI * PI * p.r * p.r);
   }
 
   VolumeSource(Vec r_, Sphere p_): radiance(r_), p(p_) {
     double r = p_.r * (1.0 + eps);
     p = p_;
     p.r = r;
-    power = radiance * ( 4 * PI * p.r * p.r);
+    power = radiance * ( 4 * PI * PI * p.r * p.r);
   }
 
 

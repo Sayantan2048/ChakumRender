@@ -7,7 +7,7 @@
 #include "domainSampler.h"
 
 #define SAMPLES 		(100)
-#define SAMPLING_TYPE	 	4 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling.
+#define SAMPLING_TYPE	 	2 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling.
 
 int nPointSources = 0;
 PointSource pSources[] = {
@@ -22,7 +22,7 @@ int nVolumeSources = 1;
 
 VolumeSource vSources[] = {
  //VolumeSource(Sphere(10, Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
- VolumeSource(Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(40000.0/3, 40000.0/3, 40000.0/3)),
+ VolumeSource(Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(40000.0, 40000.0, 40000.0)),
  //VolumeSource(Sphere(10.5, Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
 };
 

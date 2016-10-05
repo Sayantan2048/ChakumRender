@@ -103,6 +103,7 @@ double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamp
     return 2 * PI * r * r;
 }
 
+
 #define DEBUG_ARCSS 0
 //Solid angle imortance sampling!!
 //Sample around w as axis, centered at x with sample points making maximum angle of theta_max with w.
