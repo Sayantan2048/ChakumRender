@@ -37,7 +37,7 @@ private:
   static const double eps = 0.001;
 };
 
-extern Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList);
-extern Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList);
+extern Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+extern Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
 
 #endif

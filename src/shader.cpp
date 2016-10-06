@@ -74,8 +74,8 @@ inline Vec shadeSphere(const Ray &r,const double t, int id, Sphere *list) {
   Vec x = r.o + r.d * t; // Calulate the point of intersection.
   Vec n = (x - obj.p).norm(); // Since this is a sphere, normal is a vector form sphere center to point of intersection.
 
-  Vec light = getLightFromPointSources(r, n, x, sphere, id, list, 0) +
-	getLightFromVolumeSources(r, n, x, sphere, id, list, 0);
+  Vec light = getLightFromPointSources(r, n, x, &list[id]) +
+	getLightFromVolumeSources(r, n, x, &list[id]);
 
   return obj.c.mult(light); // Compute color of intersection.
 }
@@ -84,8 +84,8 @@ inline Vec shadeTriangle(const Ray &r,const double t, const Vec &N, int id, Tria
   const Triangle &obj = list[id];
   Vec x = r.o + r.d * t; // Calulate the point of intersection.
 
-  Vec light = getLightFromPointSources(r, N, x, triangle, id, 0, list) +
-	getLightFromVolumeSources(r, N, x, triangle, id, 0, list);
+  Vec light = getLightFromPointSources(r, N, x, &list[id]) +
+	getLightFromVolumeSources(r, N, x, &list[id]);
 
   return obj.c.mult(light); // Compute color of intersection.
 }
@@ -97,7 +97,7 @@ Vec shade(const Ray &r) {
 
   bool iTriangle = intersectTriangle(r, tT, N, idT, nTriangles, triangleList);
   bool iSphere = intersectSphere(r, tS, idS, nSpheres, sphereList);
-  
+
   /* TODO:Find the color of other primitive type and Chose the closest one.
   if (intersectType1 == 1 and intersectType2 == 0)
     return color of tyoe1.

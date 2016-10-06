@@ -4,6 +4,17 @@
 #include "materialTypes.h"
 #include <cstdio>
 
+double BasePrimitive::brdf(Vec wi, Vec wr, Vec x) const {
+  if (m == lambertian)
+    return Lambertian::brdf() * reflectance;
+  else if (m == diffuse)
+    return Diffuse::brdf() * reflectance;
+  else
+      fprintf(stderr, "Invalid material type.\n");
+
+  return 0;
+}
+
 // Always return positve t or Does not intersect!!
 double Sphere::intersect(const Ray &ray) const {
   Vec op = p - ray.o; // Vector from center of circle to ray origin
@@ -20,17 +31,6 @@ double Sphere::intersect(const Ray &ray) const {
   // For concave intersection there are two possiblites, 1. op and ray.d are in same direction, hence b > 0.
   // 2. op and ray.d in opposite directions, hence b < 0. But for both cases, t = b + det.
   return (t = b - det) > eps ? t : ((t = b + det) > eps ? t: INF); // t is always positve.
-}
-
-double Sphere::brdf(Vec wi, Vec wr, Vec x) const {
-  if (m == lambertian)
-    return Lambertian::brdf() * reflectance;
-  else if (m == diffuse)
-    return Diffuse::brdf() * reflectance;
-  else
-      fprintf(stderr, "INVALID BRDF IN SPHERE.\n");
-
-  return 0;
 }
 
 double Triangle::intersect(const Ray &ray, Vec &N) const {
@@ -75,15 +75,4 @@ double Triangle::intersect(const Ray &ray, Vec &N) const {
   else if (0 > beta || beta > 1) return INF;
 
   return t;
-}
-
-double Triangle::brdf(Vec wi, Vec wr, Vec x) const {
-  if (m == lambertian)
-    return Lambertian::brdf() * reflectance;
-  else if (m == diffuse)
-    return Diffuse::brdf() * reflectance;
-  else
-      fprintf(stderr, "INVALID BRDF IN SPHERE.\n");
-
-  return 0;
 }

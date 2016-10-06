@@ -6,7 +6,7 @@
 #include <cmath>
 #include "domainSampler.h"
 
-#define SAMPLES 		(100)
+#define SAMPLES 		(10)
 #define SAMPLING_TYPE	 	2 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling.
 
 int nPointSources = 0;
@@ -26,7 +26,7 @@ VolumeSource vSources[] = {
  //VolumeSource(Sphere(10.5, Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
 };
 
-Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList) {
+Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   int convex = 1; // check whether the surface is convex or not from the direction of viewing
   Vec refd; // direction from point toward light source
   Ray rr(0,0); // a ray from point toward light source.
@@ -58,13 +58,8 @@ Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, Primitive
       }
     }
 
-    if (m == sphere)
-      brdf = sphereList[id].brdf(rr.d, rr.d, rr.d);
-    else if (m == triangle)
-      brdf = triangleList[id].brdf(rr.d, rr.d, rr.d);
-    else
-	fprintf(stderr, "PrimitiveType not found in getLightFromPointSources.\n");
-    /* TODO: ADD BRDF FOR OTHER PrimitiveTypes */
+    brdf = primitive->brdf(rr.d, rr.d, rr.d);
+
     sumLight = sumLight + (pSources[i].radiance(x) * (cosine * brdf));
   }
 
@@ -73,7 +68,7 @@ Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, Primitive
 
 #if SAMPLING_TYPE & 1
 
-Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList) {
+Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   int convex = 1; // check whether the surface is convex or not from the direction of viewing
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
@@ -115,13 +110,8 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
 	}
       }
 
-      if (m == sphere)
-	brdf = sphereList[id].brdf(rr.d, rr.d, rr.d);
-      else if (m == triangle)
-	brdf = triangleList[id].brdf(rr.d, rr.d, rr.d);
-      else
-	fprintf(stderr, "PrimitiveType not found in getLightFromPointSources.\n");
-      /* TODO: ADD BRDF FOR OTHER PrimitiveTypes */
+      brdf = primitive->brdf(rr.d, rr.d, rr.d);
+
       sum += (cosine * brdf);
     }
     sumLight = sumLight + vSources[j].radiance * ( pdf * sum/SAMPLES);
@@ -130,7 +120,7 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
 }
 
 #elif SAMPLING_TYPE & 2
-Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList) {
+Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   int convex = 1; // check whether the surface is convex or not from the direction of viewing
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
@@ -177,13 +167,8 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
 	}
       }
 
-      if (m == sphere)
-	brdf = sphereList[id].brdf(rr.d, rr.d, rr.d);
-      else if (m == triangle)
-	brdf = triangleList[id].brdf(rr.d, rr.d, rr.d);
-      else
-	fprintf(stderr, "PrimitiveType not found in getLightFromPointSources.\n");
-      /* TODO: ADD BRDF FOR OTHER PrimitiveTypes */
+      brdf = primitive->brdf(rr.d, rr.d, rr.d);
+
       sum += (cosine * brdf);
     }
     sumLight = sumLight + vSources[j].radiance * ( pdf * sum/SAMPLES);
@@ -192,7 +177,7 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
 }
 
 #else
-Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, PrimitiveType m, int id, Sphere *sphereList, Triangle *triangleList) {
+Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   int convex = 1; // check whether the surface is convex or not from the direction of viewing
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
@@ -235,13 +220,8 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, Primitiv
 	}
       }
 
-      if (m == sphere)
-	brdf = sphereList[id].brdf(rr.d, rr.d, rr.d);
-      else if (m == triangle)
-	brdf = triangleList[id].brdf(rr.d, rr.d, rr.d);
-      else
-	fprintf(stderr, "PrimitiveType not found in getLightFromPointSources.\n");
-      /* TODO: ADD BRDF FOR OTHER PrimitiveTypes */
+      brdf = primitive->brdf(rr.d, rr.d, rr.d);
+
       sum += (cosine * cosine1 * brdf / (d * d));
     }
     sumLight = sumLight + vSources[j].radiance * ( pdf * sum/SAMPLES);
