@@ -22,7 +22,7 @@ int nVolumeSources = 1;
 
 VolumeSource vSources[] = {
  //VolumeSource(Sphere(10, Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
- VolumeSource(Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(40000.0, 40000.0, 40000.0)),
+ VolumeSource(Sphere(2, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(40000.0, 40000.0, 40000.0)),
  //VolumeSource(Sphere(10.5, Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
 };
 

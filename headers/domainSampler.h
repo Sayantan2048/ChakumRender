@@ -8,6 +8,7 @@
 class SphericalSampler {
   static Vec *sampleVolume;
   static Vec *sampleSurface;
+  static double *randoms; // A bag of random numbers
   static int __initSamples;
 
   static int initSamples();

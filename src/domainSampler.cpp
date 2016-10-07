@@ -9,6 +9,7 @@
 
 Vec* SphericalSampler::sampleVolume;
 Vec* SphericalSampler::sampleSurface;
+double* SphericalSampler::randoms;
 int SphericalSampler::__initSamples = SphericalSampler::initSamples();
 
 int SphericalSampler::initSamples() {
@@ -17,6 +18,7 @@ int SphericalSampler::initSamples() {
     /* Optimize...Use aligned memory??*/
     sampleVolume = new Vec[nSAMPLES * MULTIPLIER];
     sampleSurface = new Vec[nSAMPLES * MULTIPLIER];
+    randoms = new double[nSAMPLES * MULTIPLIER];
     for (int i = 0; i < nSAMPLES * MULTIPLIER;) {
       x = randomMTD(-1.0, 1.0);
       y = randomMTD(-1.0, 1.0);
@@ -28,6 +30,9 @@ int SphericalSampler::initSamples() {
 	i++;
       }
     }
+    for (int i = 0; i < nSAMPLES * MULTIPLIER; i++)
+      randoms[i] = randomMTD(0, 1);
+
     return 0;
 }
 
@@ -107,7 +112,60 @@ double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamp
 #define DEBUG_ARCSS 0
 //Solid angle imortance sampling!!
 //Sample around w as axis, centered at x with sample points making maximum angle of theta_max with w.
-double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store) {
+// This implementation is slower but numerically more stable.
+
+double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x0, double theta_max, int nSamples, Vec *store) {
+  // calculate area of cap using cap-hat theorem
+  double A = 2.0 * PI * (1 - cos(theta_max));
+
+  seedMT(clock() & 0xFFFFFFFF);
+  int offset = randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
+
+  w.norm(); // Z - axis is transfomed to this axis.
+
+  Vec newX; // X - axis transfomed to this axis.
+  // Let's find a Vector perpendicular to w.
+  if (w.x != 0)
+    newX = Vec((-w.y-w.z)/w.x, 1.0, 1.0);
+  else if (w.y != 0)
+    newX = Vec(1.0,  -w.z/w.y, 1.0); // since w.x is zero, we can simplify 2nd dimension
+  else if (w.z != 0)
+    newX = Vec(1.0, 1.0, 0); // Since both w.x and w.y are zero.
+  else
+    fprintf (stderr, "WTF is w??\n");
+
+  newX.norm();
+
+  Vec newY = (w%newX).norm();
+
+  //Our transformation matrix is [newX, newY, w]
+  for (int i = 0, j = offset & 0xFFFFFFF0; i < nSamples; i++, j += 2) {
+    double e1 = randoms[j];
+    double e2 = randoms[j+1];
+    double costheta = 1.0 - (A * e1) / (2.0 * PI);
+    double theta = acos(costheta);
+    double phi = 2 * PI * e2;
+
+    double sintheta = sin(theta);
+    double cosphi = cos(phi);
+    double sinphi = sin(phi);
+    double x = sintheta * cosphi;
+    double y = sintheta * sinphi;
+    double z = costheta;
+
+    //Apply transformation, rotate
+    Vec sample = Vec(x * newX.x + y * newY.x + z * w.x,
+		     x * newX.y + y * newY.y + z * w.y,
+		     x * newX.z + y * newY.z + z * w.z);
+
+    store[i] = sample + x0;
+  }
+
+  return A;
+}
+
+// This implementation is slightly faster but less numerically satble. You will see artifacts when size of light source gets smaller.
+/*double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store) {
   seedMT(clock() & 0xFFFFFFFF);
   double eps = 1e-14;
 
@@ -225,7 +283,7 @@ double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x, double theta_max, 
   // Use Cap-hat theorem to return 1/pdf which is essentially the area of spherical cap subtended by the light.
   return 2.0 * PI * (1 - cos(theta_max));
 
-}
+}*/
 
 void SphericalSampler::getDistribution(Vec n, Vec x, int nSamples, Vec *samples) {
     int *histogramElevation = new int[181]; // 180 degrees
