@@ -6,10 +6,10 @@
 #include <cmath>
 #include "domainSampler.h"
 
-#define SAMPLES 		(10)
-#define SAMPLING_TYPE	 	2 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling.
+#define SAMPLES 		(40)
+#define SAMPLING_TYPE	 	2 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 
-int nPointSources = 0;
+int nPointSources = 1;
 PointSource pSources[] = {
   //PointSource(Vec(50, 10.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(50, 68.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
@@ -18,11 +18,11 @@ PointSource pSources[] = {
   PointSource(Vec(73, 16.6 - .27, 78), Vec(40000.0, 40000.0, 40000.0))
 };
 
-int nVolumeSources = 1;
+int nVolumeSources = 0;
 
 VolumeSource vSources[] = {
  //VolumeSource(Sphere(10, Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
- VolumeSource(Sphere(2, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(40000.0, 40000.0, 40000.0)),
+ VolumeSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian)),
  //VolumeSource(Sphere(10.5, Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
 };
 
@@ -58,7 +58,7 @@ Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimi
       }
     }
 
-    brdf = primitive->brdf(rr.d, rr.d, rr.d);
+    brdf = primitive->brdf(n, r.d * -1.0, refd, x);
 
     sumLight = sumLight + (pSources[i].radiance(x) * (cosine * brdf));
   }
@@ -74,7 +74,7 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrim
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  static Vec samples[SAMPLES] = {0};
+  Vec samples[SAMPLES] = {0};
 
   // test for convex or concave as seen from a point.
   if (r.d.dot(n) >= 0) {
@@ -110,7 +110,7 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrim
 	}
       }
 
-      brdf = primitive->brdf(rr.d, rr.d, rr.d);
+      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
 
       sum += (cosine * brdf);
     }
@@ -126,7 +126,7 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrim
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  static Vec samples[nSAMPLES] = {0};
+  Vec samples[nSAMPLES] = {0};
 
   // test for convex or concave as seen from a point.
   if (r.d.dot(n) >= 0) {
@@ -157,9 +157,6 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrim
 
       cosine = rr.d.dot(n);
 
-      //double cosine1 = rr.d.dot((rr.o + rr.d * d - vSources[j].p.p).norm());
-      //cosine1 = cosine1 < 0 ? -cosine1 : 0;
-
       if (cosine < 0) {
 	cosine = -cosine;
 	if (convex) { // This code colors the dark side of an object black.
@@ -167,7 +164,7 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrim
 	}
       }
 
-      brdf = primitive->brdf(rr.d, rr.d, rr.d);
+      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
 
       sum += (cosine * brdf);
     }
@@ -176,14 +173,14 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrim
   return sumLight;
 }
 
-#else
+#elif SAMPLING_TYPE & 4
 Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   int convex = 1; // check whether the surface is convex or not from the direction of viewing
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  static Vec samples[nSAMPLES] = {0};
+  Vec samples[nSAMPLES] = {0};
 
   // test for convex or concave as seen from a point.
   if (r.d.dot(n) >= 0) {
@@ -220,9 +217,61 @@ Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrim
 	}
       }
 
-      brdf = primitive->brdf(rr.d, rr.d, rr.d);
+      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
 
       sum += (cosine * cosine1 * brdf / (d * d));
+    }
+    sumLight = sumLight + vSources[j].radiance * ( pdf * sum/SAMPLES);
+  }
+  return sumLight;
+}
+#else
+
+Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+  int convex = 1; // check whether the surface is convex or not from the direction of viewing
+  double cosine = 0;
+  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
+  double eps = 1e-08;
+  double brdf = 0;
+  Vec samples[SAMPLES] = {0};
+
+  // test for convex or concave as seen from a point.
+  if (r.d.dot(n) >= 0) {
+      convex = 0;
+  }
+
+  // returns 1/pdf.
+  double pdf = SphericalSampler::getCosineSurfaceSamples(convex?n:(n*-1.0), x, SAMPLES, samples);
+  Vec sumLight = Vec();
+  rr.o = x + n * (convex?eps:-eps);
+
+  for (int j = 0; j < nVolumeSources; j++) {
+    double sum = 0;
+    for (int i = 0; i < SAMPLES; i++) {
+      double d;
+
+      rr.d = (samples[i] - x);
+
+      d = vSources[j].p.intersect(rr);
+
+      if (d >= INF)
+	continue;
+
+      if (shadow(rr, d) < 0.5)
+	continue;
+
+      cosine = rr.d.dot(n);
+
+      if (cosine < 0) {
+	cosine = -cosine;
+	if (convex) { // This code colors the dark side of an object black.
+	  continue;
+	}
+      }
+
+      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
+
+      sum += (brdf);
     }
     sumLight = sumLight + vSources[j].radiance * ( pdf * sum/SAMPLES);
   }

@@ -15,7 +15,7 @@ public:
   // material type.
   MaterialType m;
   // brdf
-  double brdf(Vec wi, Vec wr, Vec x) const;
+  double brdf(Vec n, Vec wo, Vec wi, Vec x) const;
   BasePrimitive(Vec c_, double r_, MaterialType m_): c(c_), reflectance(r_), m(m_) {}
 };
 
@@ -35,6 +35,7 @@ public:
   double intersect(const Ray &ray) const;
 };
 
+#define dV Vec(1., 1., 1.)
 class Triangle: public BasePrimitive {
   static const double eps = 1e-10;
 public:
@@ -43,7 +44,7 @@ public:
   // normal
   Vec n;
 
-  Triangle(Vec A_, Vec B_, Vec C_, Vec c_, double r_, MaterialType m_): BasePrimitive(c_, r_, m_) {
+  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = lambertian): BasePrimitive(c_, r_, m_) {
 	  Vec c;
 	  A = A_;
 	  B = B_;
@@ -52,8 +53,8 @@ public:
 	  c = (C - A);
 	  n = c%n;
 	  n.norm();
-	}
+  }
   double intersect(const Ray &ray, Vec &N) const;
 };
-
+#undef dV
 #endif

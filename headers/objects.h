@@ -6,6 +6,8 @@ extern int nSpheres;
 extern Sphere sphereList[];
 
 extern int nTriangles;
-extern Triangle triangleList[];
+extern Triangle *triangleList;
+
+extern int load();
 
 #endif

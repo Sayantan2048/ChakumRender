@@ -8,7 +8,8 @@
 class SphericalSampler {
   static Vec *sampleVolume;
   static Vec *sampleSurface;
-  static double *randoms; // A bag of random numbers
+  static double *randoms; // A bag of random numbers between 0 and 1
+  static Vec *cosineSurfaceSamples; // Cosine weighted samples along z-axis as normal and center origin.
   static int __initSamples;
 
   static int initSamples();
@@ -23,6 +24,7 @@ class SphericalSampler {
   static double getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store);
   static double getSolidSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store);
   static double getLightSurfaceSample(Vec c, double r, Vec x, int nSamples, Vec *store);
+  static double getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Vec *store);
   static void getDistribution(Vec n, Vec x, int nSamples, Vec *samples);
 };
 

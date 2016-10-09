@@ -7,12 +7,13 @@ public:
   static double brdf();
 };
 
-class Diffuse {
-  Diffuse();
+class Phong {
+  Phong();
+  static double e;
 public:
-  static double brdf();
+  static double brdf(Vec n, Vec wo, Vec wi);
 };
 
-enum MaterialType {lambertian = 0, diffuse};
+enum MaterialType {lambertian = 0, phong};
 
 #endif

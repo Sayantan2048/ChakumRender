@@ -4,6 +4,7 @@
 #include "objects.h"
 #include "shader.h"
 #include "lightSources.h"
+#include "domainSampler.h"
 #include <cmath>
 #include <cstdio>
 
@@ -90,12 +91,17 @@ inline Vec shadeTriangle(const Ray &r,const double t, const Vec &N, int id, Tria
   return obj.c.mult(light); // Compute color of intersection.
 }
 
-Vec shade(const Ray &r) {
+Vec shade(const Ray &r, int &depth) {
   double tS, tT;
   int idS, idT;
-  Vec N;
+  Vec n;
 
-  bool iTriangle = intersectTriangle(r, tT, N, idT, nTriangles, triangleList);
+  if (depth == 0)
+    return Vec();
+
+  depth--;
+
+  bool iTriangle = intersectTriangle(r, tT, n, idT, nTriangles, triangleList);
   bool iSphere = intersectSphere(r, tS, idS, nSpheres, sphereList);
 
   /* TODO:Find the color of other primitive type and Chose the closest one.
@@ -108,10 +114,60 @@ Vec shade(const Ray &r) {
   else
     return black.
     */
+  Ray secondaryRay(0,0);
 
-  if (iSphere || iTriangle)
-    return tS<tT?shadeSphere(r, tS, idS, sphereList):shadeTriangle(r, tT, N, idT, triangleList);
+  if (iSphere || iTriangle) {
+    Vec sum = Vec(0, 0, 0);
+    if (tS < tT) {
+      /*secondaryRay.o = r.o + r.d * tS;
+      n = (secondaryRay.o - sphereList[idS].p).norm();
+      secondaryRay.o = secondaryRay.o + n * 1e-06;
+      secondaryRay.d = n;
+     /* Vec *samples = new Vec[100];
+      double pdf = SphericalSampler::getHemiSurfaceSamples(n, secondaryRay.o, 100, samples);
+      for (int i = 0; i < 100; i++) {
+	int depth2 = depth;
+	secondaryRay.d = samples[i] - secondaryRay.o;
+	sum  = sum + ((sphereList[idS].m == phong)? shade(secondaryRay, depth2) : Vec());
+      }
+      delete []samples;*/
+     /*int depth2 = depth;
+     sum = shade(secondaryRay, depth2);
+     secondaryRay.d = (n + r.d * -1.0).norm();
+     depth2 = depth;
+     sum = sum + shade(secondaryRay, depth2);
+     secondaryRay.d = (n + r.d * -1.5).norm();
+     depth2 = depth;
+     sum = sum + shade(secondaryRay, depth2);
+     secondaryRay.d = (n + r.d * -2.5).norm();
+     depth2 = depth;
+     sum = sum + shade(secondaryRay, depth2);*/
+     // fprintf(stderr, "%f %f %f\n", sum.x, sum.y, sum.z);*/
+      return shadeSphere(r, tS, idS, sphereList) + sum * 0.25 * 0.2;
+    }
+    else {
+     /* secondaryRay.o = r.o + r.d * tT;
+      secondaryRay.o = secondaryRay.o + n * 1e-06;
+      secondaryRay.d = n;
+     int depth2 = depth;
+     sum = shade(secondaryRay, depth2);
+     secondaryRay.d = (n + r.d * -1.0).norm();
+     depth2 = depth;
+     sum = sum + shade(secondaryRay, depth2);
+     secondaryRay.d = (n + r.d * -1.5).norm();
+     depth2 = depth;
+     sum = sum + shade(secondaryRay, depth2);
+     secondaryRay.d = (n + r.d * -2.5).norm();
+     depth2 = depth;
+     sum = sum + shade(secondaryRay, depth2);
+    // if (r.d.dot(n)>0)
+    // fprintf(stderr, "%f %f %f\n", sum.x, sum.y, r.d.dot(n)    );*/
+      return shadeTriangle(r, tT, n, idT, triangleList) + sum * 0.25 * 0.7;
 
+
+    }
+
+  }
   return Vec();
 }
 

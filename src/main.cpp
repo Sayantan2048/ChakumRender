@@ -7,6 +7,7 @@
 #include "random.h"
 #include "objects.h"
 #include "shader.h"
+#include <omp.h>
 #include <cmath>
 #include <ctime>
 
@@ -22,7 +23,8 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 inline int toDisplayValue(double x){ return int( pow( clamp(x), 1.0/2.2 ) * 255 + .5); }
 
 int main(int argc, char *argv[]) {
-  int w = 512, h = 384;
+  int w = 256*2, h = 192*2;
+  load();
   // camera location and direction of looking. Imagine right direction is x, up is y, and z is out of screen. Camera is mostly looking towards -z direction!!
   Ray camera( Vec(50, 50, 275.0), Vec(0, -0.05, -1).norm());
   //Define pixel pitch along width of the screen. Field of view is 30 + 30 or 60 degrees.
@@ -32,7 +34,7 @@ int main(int argc, char *argv[]) {
   // 2D Array of pixels
   Vec pixelValue, *pixelColors = new Vec[w * h];
 
-  #pragma omp parallel for schedule(dynamic, 1) private(pixelValue)
+  #pragma omp parallel for private(pixelValue)
   for(int y = 0; y < h; y++) {
     // Percentage completion!!
     fprintf(stderr,"\r%5.2f%%",100.*y/(h-1));
@@ -41,10 +43,11 @@ int main(int argc, char *argv[]) {
       int idx = (h - y - 1) * w + x;
       pixelValue = Vec();
       for (int k = 0; k < ANTIALIASING; k++) {
+	int depth = 2;
 	// Shoot ray from camera thur each pixel: Computed as: camera direction +/- deviation from camera direction in terms of pixel pitch.
 	Vec cameraRayDir = cx * ( (double(x) + x_alias[k])/w - .5) + cy * ((double(y) + y_alias[k])/h - .5) + camera.d;
 	// Find color of intersection. In case no intersection is found color the pixel black.
-	pixelValue = pixelValue + shade(Ray(camera.o, cameraRayDir.norm()));
+	pixelValue = pixelValue + shade(Ray(camera.o, cameraRayDir.norm()), depth);
       }
       pixelValue = pixelValue / ANTIALIASING;
       // Clamp the rgb values.

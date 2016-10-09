@@ -4,11 +4,11 @@
 #include "materialTypes.h"
 #include <cstdio>
 
-double BasePrimitive::brdf(Vec wi, Vec wr, Vec x) const {
+double BasePrimitive::brdf(Vec n, Vec wo, Vec wi, Vec x) const {
   if (m == lambertian)
     return Lambertian::brdf() * reflectance;
-  else if (m == diffuse)
-    return Diffuse::brdf() * reflectance;
+  else if (m == phong)
+    return Phong::brdf(n, wo, wi) * reflectance;
   else
       fprintf(stderr, "Invalid material type.\n");
 

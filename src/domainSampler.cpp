@@ -9,6 +9,7 @@
 
 Vec* SphericalSampler::sampleVolume;
 Vec* SphericalSampler::sampleSurface;
+Vec* SphericalSampler::cosineSurfaceSamples;
 double* SphericalSampler::randoms;
 int SphericalSampler::__initSamples = SphericalSampler::initSamples();
 
@@ -19,6 +20,7 @@ int SphericalSampler::initSamples() {
     sampleVolume = new Vec[nSAMPLES * MULTIPLIER];
     sampleSurface = new Vec[nSAMPLES * MULTIPLIER];
     randoms = new double[nSAMPLES * MULTIPLIER];
+    cosineSurfaceSamples = new Vec[nSAMPLES * MULTIPLIER];
     for (int i = 0; i < nSAMPLES * MULTIPLIER;) {
       x = randomMTD(-1.0, 1.0);
       y = randomMTD(-1.0, 1.0);
@@ -32,6 +34,19 @@ int SphericalSampler::initSamples() {
     }
     for (int i = 0; i < nSAMPLES * MULTIPLIER; i++)
       randoms[i] = randomMTD(0, 1);
+
+    // Cosine weighted surface samples.
+    for (int i = 0; i < nSAMPLES * MULTIPLIER; i++) {
+      double e1 = randomMTD(0, 1);
+      double e2 = randomMTD(0, 1);
+      double theta = asin(sqrt(e1));
+      double phi = 2 * PI * e2;
+      double x = sin(theta) * cos(phi);
+      double y = sin(theta) * sin(phi);
+      double z = cos(theta);
+
+      cosineSurfaceSamples[i] = Vec(x, y, z);
+    }
 
     return 0;
 }
@@ -107,13 +122,47 @@ double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamp
 
     return 2 * PI * r * r;
 }
+// Cosine weighted surface sampling.
+double SphericalSampler::getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Vec *store) {
+    seedMT(clock() & 0xFFFFFFFF);
+    int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES); // We'll use one sample on every iteration.
 
+    n.norm(); // Z - axis is transfomed to this axis.
+
+    Vec newX; // X - axis transfomed to this axis.
+    // Let's find a Vector perpendicular to n.
+    if (n.x != 0)
+      newX = Vec((-n.y-n.z)/n.x, 1.0, 1.0);
+    else if (n.y != 0)
+      newX = Vec(1.0,  -n.z/n.y, 1.0); // since n.x is zero, we can simplify 2nd dimension
+    else if (n.z != 0)
+      newX = Vec(1.0, 1.0, 0); // Since both n.x and n.y are zero.
+    else
+      fprintf (stderr, "WTF is n??\n");
+
+    newX.norm();
+
+    Vec newY = (n%newX).norm();
+
+    for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++) {
+      double x = cosineSurfaceSamples[i].x;
+      double y = cosineSurfaceSamples[i].y;
+      double z = cosineSurfaceSamples[i].z;
+
+      Vec sample = Vec(x * newX.x + y * newY.x + z * n.x,
+		     x * newX.y + y * newY.y + z * n.y,
+		     x * newX.z + y * newY.z + z * n.z);
+
+      store[j] = sample + x0;
+    }
+
+    return PI;
+}
 
 #define DEBUG_ARCSS 0
 //Solid angle imortance sampling!!
 //Sample around w as axis, centered at x with sample points making maximum angle of theta_max with w.
 // This implementation is slower but numerically more stable.
-
 double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x0, double theta_max, int nSamples, Vec *store) {
   // calculate area of cap using cap-hat theorem
   double A = 2.0 * PI * (1 - cos(theta_max));
