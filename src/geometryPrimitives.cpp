@@ -76,3 +76,81 @@ double Triangle::intersect(const Ray &ray, Vec &N) const {
 
   return t;
 }
+
+AABBox::AABBox(const Vec &p1, const Vec &p2) {
+  pMin = Vec(miN(p1.x, p2.x), miN(p1.y, p2.y), miN(p1.z, p2.z));
+  pMax = Vec(maX(p1.x, p2.x), maX(p1.y, p2.y), maX(p1.z, p2.z));
+}
+
+AABBox::AABBox(const Vec &p, double r) {
+  pMin = Vec(p.x - r, p.y - r, p.z - r);
+  pMax = Vec(p.x + r, p.y + r, p.z + r);
+}
+
+AABBox AABBox::uNion(const AABBox &b, const Vec &p) {
+  AABBox ret = b;
+  ret.pMin.x = miN(b.pMin.x, p.x);
+  ret.pMin.y = miN(b.pMin.y, p.y);
+  ret.pMin.z = miN(b.pMin.z, p.z);
+  ret.pMax.x = maX(b.pMax.x, p.x);
+  ret.pMax.y = maX(b.pMax.y, p.y);
+  ret.pMax.z = maX(b.pMax.z, p.z);
+  return ret;
+}
+
+AABBox AABBox::uNion(const AABBox &a, const AABBox &b) {
+  AABBox ret = b;
+  ret.pMin.x = miN(a.pMin.x, b.pMin.x);
+  ret.pMin.y = miN(a.pMin.y, b.pMin.y);
+  ret.pMin.z = miN(a.pMin.z, b.pMin.z);
+  ret.pMax.x = maX(a.pMax.x, b.pMax.x);
+  ret.pMax.y = maX(a.pMax.y, b.pMax.x);
+  ret.pMax.z = maX(a.pMax.z, b.pMax.x);
+  return ret;
+}
+
+#define swap(a,b) {tmp = a; a = b; b = tmp;}
+double AABBox::intersect(const Ray &ray) const {
+  double t0 = -INF, t1 = INF;
+  double tmp;
+
+  double invRayDir  = 1. / ray.d.x;
+  double tNear = (pMin.x - ray.o.x) * invRayDir;
+  double tFar = (pMax.x - ray.o.x) * invRayDir;
+
+  if (tNear > tFar) swap(tNear, tFar);
+  t0 = tNear > t0 ? tNear : t0;
+  t1 = tFar < t1 ? tFar : t1;
+  if (t0 > t1) return INF;
+
+  invRayDir  = 1.f / ray.d.y;
+  tNear = (pMin.y - ray.o.y) * invRayDir;
+  tFar = (pMax.y - ray.o.y) * invRayDir;
+
+  if (tNear > tFar) swap(tNear, tFar);
+  t0 = tNear > t0 ? tNear : t0;
+  t1 = tFar < t1 ? tFar : t1;
+  if (t0 > t1) return INF;
+
+  invRayDir  = 1.f / ray.d.z;
+  tNear = (pMin.z - ray.o.z) * invRayDir;
+  tFar = (pMax.z - ray.o.z) * invRayDir;
+
+  if (tNear > tFar) swap(tNear, tFar);
+  t0 = tNear > t0 ? tNear : t0;
+  t1 = tFar < t1 ? tFar : t1;
+  if (t0 > t1) return INF;
+
+  return t0;
+}
+#undef swap
+
+int AABBox::maximumExtent() const {
+  Vec diag = pMax - pMin;
+  if (diag.x > diag.y && diag.x > diag.z)
+    return 0;
+  else if (diag.y > diag.z)
+    return 1;
+  else
+    return 2;
+}

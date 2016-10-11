@@ -5,6 +5,8 @@
 #include "shader.h"
 #include "lightSources.h"
 #include "domainSampler.h"
+#include "dummyAccel.h"
+#include "bvhAccel.h"
 #include <cmath>
 #include <cstdio>
 
@@ -28,7 +30,7 @@ static inline bool intersectSphere(const Ray &r, double &t, int &id, int nSphere
 
 // return true if there is an intersection of a ray with any of the spheres.
 static inline bool intersectTriangle(const Ray &r, double &t, Vec &N, int &id, int nTriangles, Triangle *list) {
-  double d;
+  /*double d;
   Vec N_;
   id = 0xFFFFFFFF;
   t = INF;
@@ -43,7 +45,9 @@ static inline bool intersectTriangle(const Ray &r, double &t, Vec &N, int &id, i
   }
 
   // return true if the intersection distance is finite.
-  return t < INF;
+  return t < INF;*/
+  //return bvhAccel->intersect(r, t, N, id);
+  return DummyAccel::intersect(r, t, N, id, nTriangles, list);
 }
 
 // Return 0 if shadowed else 1.

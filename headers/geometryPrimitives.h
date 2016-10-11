@@ -1,10 +1,23 @@
 #if !defined(geometryPrimitives_h__)
 #define geometryPrimitives_h__
+
 #include "mathPrimitives.h"
 #include "materialTypes.h"
 #include <cmath>
 
 enum PrimitiveType {sphere = 0, triangle};
+
+//Axis aligned bounding box.
+struct AABBox {
+  Vec pMin, pMax;
+  AABBox(const Vec &p): pMin(p), pMax(p){}
+  AABBox(const Vec &p1, const Vec &p2);
+  AABBox(const Vec &p, double r);
+  static AABBox uNion(const AABBox &b, const Vec &p);
+  static AABBox uNion(const AABBox &a, const AABBox &b);
+  double intersect(const Ray &ray) const;
+  int maximumExtent() const;
+};
 
 class BasePrimitive {
 public:
@@ -14,9 +27,11 @@ public:
   double reflectance;
   // material type.
   MaterialType m;
+  // Axis Aligned bounding box.
+  AABBox box;
   // brdf
   double brdf(Vec n, Vec wo, Vec wi, Vec x) const;
-  BasePrimitive(Vec c_, double r_, MaterialType m_): c(c_), reflectance(r_), m(m_) {}
+  BasePrimitive(Vec c_, double r_, MaterialType m_, AABBox b): c(c_), reflectance(r_), m(m_), box(b) {}
 };
 
 class Sphere: public BasePrimitive {
@@ -27,7 +42,7 @@ public:
   // position
   Vec p;
 
-  Sphere(double r_, Vec p_, Vec c_, double ref_, MaterialType m_): BasePrimitive(c_, ref_, m_) {
+  Sphere(double r_, Vec p_, Vec c_, double ref_, MaterialType m_): BasePrimitive(c_, ref_, m_, AABBox(p_, r)) {
     r = r_;
     p = p_;
   }
@@ -44,7 +59,8 @@ public:
   // normal
   Vec n;
 
-  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = lambertian): BasePrimitive(c_, r_, m_) {
+  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = lambertian):
+    BasePrimitive(c_, r_, m_, AABBox::uNion(AABBox(A_, B_), C_)) {
 	  Vec c;
 	  A = A_;
 	  B = B_;

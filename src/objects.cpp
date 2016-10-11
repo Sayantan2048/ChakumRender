@@ -4,6 +4,10 @@
 #include "objects.h"
 #include "mathPrimitives.h"
 #include "transformations.h"
+#include "dummyAccel.h"
+#include "bvhAccel.h"
+#include <iostream>
+
 int nSpheres = 0;
 Sphere sphereList[] = {
   Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25, .25), 1.0, lambertian),
@@ -60,6 +64,8 @@ int load() {
 	triangleList[i] = Triangle(Av, Bv, Cv, Vec(0.9, 0.5, 0.9), 0.9, phong);
 
   }
-
-
+  //bvhAccel = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
+  //bvhAccel -> initAccel();
+  
+  DummyAccel::initAccel(nTriangles, triangleList);
 }

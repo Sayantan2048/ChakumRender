@@ -23,7 +23,7 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 inline int toDisplayValue(double x){ return int( pow( clamp(x), 1.0/2.2 ) * 255 + .5); }
 
 int main(int argc, char *argv[]) {
-  int w = 256*2, h = 192*2;
+  int w = 50, h = 50;
   load();
   // camera location and direction of looking. Imagine right direction is x, up is y, and z is out of screen. Camera is mostly looking towards -z direction!!
   Ray camera( Vec(50, 50, 275.0), Vec(0, -0.05, -1).norm());

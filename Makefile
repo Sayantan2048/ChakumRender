@@ -10,9 +10,9 @@ OBJ = $(ROOT)/src
 #make will look for files in these path apart from current location of makefile
 VPATH = $(SRC) $(INCLUDES) $(OBJ) $(ROOT)/externLib/sharedLib $(ROOT)/externLib/objectLoader
 
-main: domainSampler.o mathPrimitives.o random.o main.o materialTypes.o geometryPrimitives.o objects.o shader.o lightSources.o transformations.o libobjLoader.so.1.0.1
+main: domainSampler.o mathPrimitives.o random.o main.o materialTypes.o geometryPrimitives.o objects.o shader.o lightSources.o transformations.o dummyAccel.o bvhAccel.o libobjLoader.so.1.0.1
 	$(CC) $(CFLAGS) $(OBJ)/domainSampler.o $(OBJ)/mathPrimitives.o $(OBJ)/random.o $(OBJ)/materialTypes.o $(OBJ)/geometryPrimitives.o $(OBJ)/objects.o $(OBJ)/shader.o $(OBJ)/lightSources.o \
-	$(OBJ)/transformations.o $(OBJ)/main.o -L$(ROOT)/externLib/sharedLib/ -lobjLoader
+	$(OBJ)/transformations.o $(OBJ)/dummyAccel.o $(OBJ)/bvhAccel.o $(OBJ)/main.o -L$(ROOT)/externLib/sharedLib/ -lobjLoader
 
 main.o: main.cpp
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/main.cpp -o $(OBJ)/main.o
@@ -43,6 +43,12 @@ lightSources.o: lightSources.h lightSources.cpp
 
 transformations.o: transformations.h transformations.cpp
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/transformations.cpp -o $(OBJ)/transformations.o
+
+dummyAccel.o: dummyAccel.h dummyAccel.cpp
+	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/dummyAccel.cpp -o $(OBJ)/dummyAccel.o
+
+bvhAccel.o: bvhAccel.cpp bvhAccel.h
+	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/bvhAccel.cpp -o $(OBJ)/bvhAccel.o
 
 libobjLoader.so.1.0.1: objLoader.o list.o objParser.o stringExtra.o
 	$(CC) $(CFLAGS) -shared -Wl,-soname,libobjLoader.so.1 -o $(ROOT)/externLib/sharedLib/libobjLoader.so.1.0.1  $(ROOT)/externLib/objectLoader/objLoader.o \

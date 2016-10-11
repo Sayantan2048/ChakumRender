@@ -3,6 +3,9 @@
 #define PI 3.14159265359
 #define INF 1e20
 
+#define maX(a, b) ((a) > (b) ? (a) : (b))
+#define miN(a, b) ((a) < (b) ? (a) : (b))
+
 struct Vec {
   double x, y, z;
   //Constructor with default values
