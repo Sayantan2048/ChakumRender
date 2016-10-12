@@ -6,7 +6,7 @@
 #include "geometryPrimitives.h"
 #include "mathPrimitives.h"
 #include "bvhAccel.h"
-#define nPRIM_LEAF	1000 // See LinearBvhNode struct and check data-type of nPrimitives before changing this.
+#define nPRIM_LEAF	1// See LinearBvhNode struct and check data-type of nPrimitives before changing this.
 
 BvhAccel *bvhAccel;
 
@@ -30,7 +30,7 @@ BvhNode* BvhAccel::recursiveBuild(uint32_t start, uint32_t end, uint32_t *totalN
 
   uint32_t nPrimitives = end - start;
 
-  if (nPrimitives <= nPRIM_LEAF) {
+  if (nPrimitives == nPRIM_LEAF) {
     uint32_t firstPrimOffset = orderedPrimitives.size();
     for (uint32_t i = start; i < end; ++i) {
       uint32_t primIdx = buildData[i].primitiveIdx;
@@ -61,11 +61,11 @@ BvhNode* BvhAccel::recursiveBuild(uint32_t start, uint32_t end, uint32_t *totalN
       node->initLeaf(firstPrimOffset, nPrimitives, bbox);
       return node;
     }
-
+/*
     Vec pmid = (centroidBounds.pMin + centroidBounds.pMax) * 0.5;
     PrimitiveInfo *midPtr = std::partition(&buildData[start], &buildData[end - 1] + 1, CompareToMid(dim, pmid));
 
-    mid = midPtr - &buildData[0];
+    mid = midPtr - &buildData[0];*/
 
     node->initInterior(dim, recursiveBuild(start, mid, totalNodes),
 	    recursiveBuild(mid, end, totalNodes));
@@ -138,13 +138,13 @@ bool BvhAccel::intersect(const Ray &r, double &t, Vec &N, int &id) {
 
   while (true) {
     const LinearBvhNode *node = &nodes[nodeNum];
-    if (node->bounds.intersect(r)) {
+    if (node->bounds.intersect(r) < INF) {
 	if (node->nPrimitives > 0) {
 	  for (uint32_t i = 0; i < node->nPrimitives; ++i) {
 	    Triangle * ptr = (Triangle *)(primitiveList + (node->primitivesOffset + i) * primActualSize);
 	    if ((d = ptr -> intersect(r, N_)) && d < t) {
 	      t = d; // set the distance of intersection.
-	      id = i; // Set the serial no. of the intersecting sphere
+	      id = node->primitivesOffset + i; // Set the serial no. of the intersecting sphere
 	      N = N_;
 	      hit = true;
 	    }

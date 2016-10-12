@@ -104,8 +104,8 @@ AABBox AABBox::uNion(const AABBox &a, const AABBox &b) {
   ret.pMin.y = miN(a.pMin.y, b.pMin.y);
   ret.pMin.z = miN(a.pMin.z, b.pMin.z);
   ret.pMax.x = maX(a.pMax.x, b.pMax.x);
-  ret.pMax.y = maX(a.pMax.y, b.pMax.x);
-  ret.pMax.z = maX(a.pMax.z, b.pMax.x);
+  ret.pMax.y = maX(a.pMax.y, b.pMax.y);
+  ret.pMax.z = maX(a.pMax.z, b.pMax.z);
   return ret;
 }
 
@@ -117,7 +117,7 @@ double AABBox::intersect(const Ray &ray) const {
   double invRayDir  = 1. / ray.d.x;
   double tNear = (pMin.x - ray.o.x) * invRayDir;
   double tFar = (pMax.x - ray.o.x) * invRayDir;
-  
+
   if (tNear > tFar) swap(tNear, tFar);
   t0 = tNear > t0 ? tNear : t0;
   t1 = tFar < t1 ? tFar : t1;
