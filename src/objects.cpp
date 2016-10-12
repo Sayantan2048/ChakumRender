@@ -64,8 +64,8 @@ int load() {
 	triangleList[i] = Triangle(Av, Bv, Cv, Vec(0.9, 0.5, 0.9), 0.9, phong);
 
   }
-  //bvhAccel = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
-  //bvhAccel -> initAccel();
-  
-  DummyAccel::initAccel(nTriangles, triangleList);
+  bvhAccel = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
+  bvhAccel -> initAccel();
+
+  //DummyAccel::initAccel(nTriangles, triangleList);
 }

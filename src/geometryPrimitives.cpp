@@ -117,7 +117,7 @@ double AABBox::intersect(const Ray &ray) const {
   double invRayDir  = 1. / ray.d.x;
   double tNear = (pMin.x - ray.o.x) * invRayDir;
   double tFar = (pMax.x - ray.o.x) * invRayDir;
-
+  
   if (tNear > tFar) swap(tNear, tFar);
   t0 = tNear > t0 ? tNear : t0;
   t1 = tFar < t1 ? tFar : t1;

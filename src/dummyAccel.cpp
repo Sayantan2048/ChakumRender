@@ -2,6 +2,7 @@
 #include "dummyAccel.h"
 #include "objects.h"
 #include <cmath>
+#include <iostream>
 
 int DummyAccel::nBoxT;
 BoxContent * DummyAccel::boxT;
@@ -27,6 +28,9 @@ void DummyAccel::initAccel(int nTriangles, Triangle *triangleList) {
   box = boxT[0].box;
   for (int i = 1; i < nBoxT; i++)
     box = AABBox::uNion(box, boxT[i].box);
+
+  std::cout<<box.pMax.x<<" "<<box.pMax.y<<" "<<box.pMax.z<<"\n";
+  std::cout<<box.pMin.x<<" "<<box.pMin.y<<" "<<box.pMin.z<<"\n";
 }
 
 bool DummyAccel::intersect(const Ray &r, double &t, Vec &N, int &id, int nTriangles, Triangle *list) {

@@ -6,6 +6,7 @@
 #include "geometryPrimitives.h"
 #include "mathPrimitives.h"
 #include "bvhAccel.h"
+#define nPRIM_LEAF	1000 // See LinearBvhNode struct and check data-type of nPrimitives before changing this.
 
 BvhAccel *bvhAccel;
 
@@ -29,7 +30,7 @@ BvhNode* BvhAccel::recursiveBuild(uint32_t start, uint32_t end, uint32_t *totalN
 
   uint32_t nPrimitives = end - start;
 
-  if (nPrimitives == 1) {
+  if (nPrimitives <= nPRIM_LEAF) {
     uint32_t firstPrimOffset = orderedPrimitives.size();
     for (uint32_t i = start; i < end; ++i) {
       uint32_t primIdx = buildData[i].primitiveIdx;
@@ -99,6 +100,7 @@ uint32_t BvhAccel::recursiveFlatten(BvhNode *node, uint32_t *offset) {
   LinearBvhNode *linearNode = &nodes[*offset];
   linearNode->bounds = node->bounds;
   uint32_t myOffset = (*offset)++;
+
   if (node->nPrimitives > 0) {
     linearNode->primitivesOffset = node->firstPrimOffset;
     linearNode->nPrimitives = node->nPrimitives;
@@ -108,9 +110,9 @@ uint32_t BvhAccel::recursiveFlatten(BvhNode *node, uint32_t *offset) {
     linearNode->nPrimitives = 0;
     recursiveFlatten(node->children[0], offset);
     linearNode->secondChildOffset = recursiveFlatten(node->children[1], offset);
-  }
+ }
 
-  return myOffset;
+ return myOffset;
 }
 
 void BvhAccel::flatten() {
@@ -133,7 +135,7 @@ bool BvhAccel::intersect(const Ray &r, double &t, Vec &N, int &id) {
   Vec N_;
   id = 0xFFFFFFFF;
   t = INF;
- 
+
   while (true) {
     const LinearBvhNode *node = &nodes[nodeNum];
     if (node->bounds.intersect(r)) {

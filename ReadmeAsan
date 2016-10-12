@@ -1,0 +1,5 @@
+export AFL_USE_ASAN=1
+export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-3.5 #change to your clang version
+export ASAN_OPTIONS=symbolize=1
+
+Also add ASAN flags in makefile to CFLAGS.

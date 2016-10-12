@@ -40,7 +40,7 @@ struct LinearBvhNode {
     uint32_t primitivesOffset; // leaf, Offset to re-ordered primitiveList array.
     uint32_t secondChildOffset; // interior, offset into flattended nodes array for second child.
   };
-  uint8_t nPrimitives; // 0 -> interior node
+  uint32_t nPrimitives; // 0 -> interior node
   uint8_t axis; // interior node: xyz
   //uint8_t pad[2]; // ensure 32 byte total size
   LinearBvhNode(const AABBox &b = AABBox(Vec(1., 1., 1.))) : bounds(b) {}

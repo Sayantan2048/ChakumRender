@@ -46,8 +46,8 @@ static inline bool intersectTriangle(const Ray &r, double &t, Vec &N, int &id, i
 
   // return true if the intersection distance is finite.
   return t < INF;*/
-  //return bvhAccel->intersect(r, t, N, id);
-  return DummyAccel::intersect(r, t, N, id, nTriangles, list);
+  return bvhAccel->intersect(r, t, N, id);
+  //return DummyAccel::intersect(r, t, N, id, nTriangles, list);
 }
 
 // Return 0 if shadowed else 1.
