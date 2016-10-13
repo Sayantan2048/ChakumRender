@@ -61,11 +61,11 @@ BvhNode* BvhAccel::recursiveBuild(uint32_t start, uint32_t end, uint32_t *totalN
       node->initLeaf(firstPrimOffset, nPrimitives, bbox);
       return node;
     }
-/*
+
     Vec pmid = (centroidBounds.pMin + centroidBounds.pMax) * 0.5;
     PrimitiveInfo *midPtr = std::partition(&buildData[start], &buildData[end - 1] + 1, CompareToMid(dim, pmid));
 
-    mid = midPtr - &buildData[0];*/
+    mid = midPtr - &buildData[0];
 
     node->initInterior(dim, recursiveBuild(start, mid, totalNodes),
 	    recursiveBuild(mid, end, totalNodes));
@@ -80,7 +80,7 @@ void BvhAccel::build() {
 
   // reorder original primitiveList as per orderedPrimitives
   // code used from https://github.com/mission-peace/interview/blob/master/src/com/interview/array/ReorderArrayByIndex.java
-  uint8_t *sVal = (uint8_t *) malloc(primActualSize);
+  /*uint8_t *sVal = (uint8_t *) malloc(primActualSize);
   for (uint32_t i = 0 ; i < orderedPrimitives.size(); i++) {
     while (orderedPrimitives[i] != i) {
       uint32_t sIndex = orderedPrimitives[orderedPrimitives[i]];
@@ -93,7 +93,17 @@ void BvhAccel::build() {
        memcpy(&primitiveList[i * primActualSize], sVal, primActualSize);
      }
   }
-  free (sVal);
+  free (sVal);*/
+  uint8_t *tempArr = (uint8_t *) malloc(primActualSize * nPrimitives);
+
+  for (uint32_t i = 0; i < nPrimitives; i++) {
+    memcpy(&tempArr[i*primActualSize], &primitiveList[orderedPrimitives[i] * primActualSize], primActualSize);
+  }
+
+  for (uint32_t i = 0; i < nPrimitives; i++)
+    memcpy(&primitiveList[i * primActualSize], &tempArr[i*primActualSize], primActualSize);
+
+  free(tempArr);
 }
 
 uint32_t BvhAccel::recursiveFlatten(BvhNode *node, uint32_t *offset) {
