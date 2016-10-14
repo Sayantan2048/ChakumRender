@@ -21,9 +21,9 @@ Sphere sphereList[] = {
   //Sphere(10,  Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian)
 };
 int nTriangles = 0;
-#define X 45
+#define X (45 + 10)
 #define Y 0
-#define Z -20
+#define Z (-20 + 10)
 #define VA Vec(27 + X, 16.5 + Y, 47 + Z)
 #define VB Vec(59 + X, 16.5 + Y, 99 + Z)
 #define VC Vec(55 + X, 50.5 + Y, 66 + Z)
@@ -44,7 +44,7 @@ int load() {
 
   triangleList = new Triangle[nTriangles];
 
-  mat3 M = scale(27, 27, 27).mul(rotateY(PI/4 + PI));
+  mat3 M = scale(35, 35, 35).mul(rotateY(PI/4 + PI));
 
   for(int i=0; i < nTriangles; i++) {
 	obj_face *o = objData->faceList[i];

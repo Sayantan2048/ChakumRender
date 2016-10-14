@@ -22,8 +22,18 @@ void BvhAccel::initAccel() {
 }
 
 BvhNode* BvhAccel::recursiveBuild(uint32_t start, uint32_t end, uint32_t *totalNodes) {
-  BvhNode *node = new BvhNode();
+  BvhNode *node = 0;
+  try {
+    node = new BvhNode();
+  } catch(std::bad_alloc) {
+    std::cerr<<"Failed to allocate memory in BvhAccel::recursiveBuild\n";
+    exit(0);
+  }
   (*totalNodes)++;
+  if ((*totalNodes) == 0xFFFFFFFF) {
+    std::cerr<<"Too many nodes.\n";
+    exit(0);
+  }
   AABBox bbox = buildData[start].box;
   for (uint32_t i = start + 1; i < end; ++i)
     bbox = AABBox::uNion(bbox, buildData[i].box);
@@ -64,9 +74,17 @@ BvhNode* BvhAccel::recursiveBuild(uint32_t start, uint32_t end, uint32_t *totalN
 
     Vec pmid = (centroidBounds.pMin + centroidBounds.pMax) * 0.5;
     PrimitiveInfo *midPtr = std::partition(&buildData[start], &buildData[end - 1] + 1, CompareToMid(dim, pmid));
-
     mid = midPtr - &buildData[0];
 
+    if (mid == end || mid == start) {
+      uint32_t firstPrimOffset = orderedPrimitives.size();
+      for (uint32_t i = start; i < end; ++i) {
+	uint32_t primIdx = buildData[i].primitiveIdx;
+	orderedPrimitives.push_back(primIdx);
+      }
+      node->initLeaf(firstPrimOffset, nPrimitives, bbox);
+      return node;
+    }
     node->initInterior(dim, recursiveBuild(start, mid, totalNodes),
 	    recursiveBuild(mid, end, totalNodes));
 
@@ -77,7 +95,6 @@ BvhNode* BvhAccel::recursiveBuild(uint32_t start, uint32_t end, uint32_t *totalN
 void BvhAccel::build() {
   orderedPrimitives.reserve(nPrimitives);
   root = recursiveBuild(0, nPrimitives, &totalNodes);
-
   // reorder original primitiveList as per orderedPrimitives
   // code used from https://github.com/mission-peace/interview/blob/master/src/com/interview/array/ReorderArrayByIndex.java
   /*uint8_t *sVal = (uint8_t *) malloc(primActualSize);
