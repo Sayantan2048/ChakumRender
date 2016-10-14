@@ -21,6 +21,7 @@ struct AABBox {
 
 class BasePrimitive {
 public:
+  static const double timeStep = 1.0;
   // color
   Vec c;
   // reflectance
@@ -46,7 +47,11 @@ public:
     r = r_;
     p = p_;
   }
-
+  void updatePos(Vec vel = Vec(0., 0., 0.), Vec acc = Vec(0.,0.,0.)) {
+    Vec d = vel * timeStep + acc * 0.5 * timeStep * timeStep;
+    p = p + d;
+    box = AABBox(p, r);
+  }
   double intersect(const Ray &ray) const;
 };
 
@@ -69,6 +74,20 @@ public:
 	  c = (C - A);
 	  n = c%n;
 	  n.norm();
+  }
+  void updatePos(Vec vel = Vec(0., 0., 0.), Vec acc = Vec(0.,0.,0.)) {
+    Vec d = vel * timeStep + acc * 0.5 * timeStep * timeStep;
+
+    A = A + d;
+    B = B + d;
+    C = C + d;
+
+    Vec c = (B - A);
+    n = (C - A);
+    n = c%n;
+    n.norm();
+
+    box = AABBox::uNion(AABBox(A, B), C);
   }
   double intersect(const Ray &ray, Vec &N) const;
 };

@@ -6,19 +6,19 @@
 #include <cmath>
 #include "domainSampler.h"
 
-#define SAMPLES 		(40)
-#define SAMPLING_TYPE	 	2 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define SAMPLES 		(400)
+#define SAMPLING_TYPE	 	8 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 
-int nPointSources = 1;
+int nPointSources = 0;
 PointSource pSources[] = {
   //PointSource(Vec(50, 10.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
-  PointSource(Vec(50, 68.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
+  PointSource(Vec(50, 68.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)),
   PointSource(Vec(50, 40.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(50, 28.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
   PointSource(Vec(73, 16.6 - .27, 78), Vec(40000.0, 40000.0, 40000.0))
 };
 
-int nVolumeSources = 0;
+int nVolumeSources = 1;
 
 VolumeSource vSources[] = {
  //VolumeSource(Sphere(10, Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))

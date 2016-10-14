@@ -7,11 +7,13 @@
 #include "random.h"
 #include "objects.h"
 #include "shader.h"
+#include "bvhAccel.h"
 #include <omp.h>
 #include <cmath>
 #include <ctime>
 
 #define ANTIALIASING 1
+#define MOTIONBLUR   1
 
 double x_alias[] = {0.34, 0.86, 0.20, 0.86, 0.66, 0.34, 0.20, 0.66};
 double y_alias[] = {0.20, 0.66, 0.66, 0.34, 0.86, 0.86, 0.34, 0.20};
@@ -34,28 +36,49 @@ int main(int argc, char *argv[]) {
   // 2D Array of pixels
   Vec pixelValue, *pixelColors = new Vec[w * h];
 
-  #pragma omp parallel for private(pixelValue)
-  for(int y = 0; y < h; y++) {
-    // Percentage completion!!
-    fprintf(stderr,"\r%5.2f%%",100.*y/(h-1));
-    for(int x = 0; x < w; x++ ) {
-      // Start from top left to bottm right of the screen.
-      int idx = (h - y - 1) * w + x;
-      pixelValue = Vec();
-      for (int k = 0; k < ANTIALIASING; k++) {
-	int depth = 2;
-	// Shoot ray from camera thur each pixel: Computed as: camera direction +/- deviation from camera direction in terms of pixel pitch.
-	Vec cameraRayDir = cx * ( (double(x) + x_alias[k])/w - .5) + cy * ((double(y) + y_alias[k])/h - .5) + camera.d;
-	// Find color of intersection. In case no intersection is found color the pixel black.
-	pixelValue = pixelValue + shade(Ray(camera.o, cameraRayDir.norm()), depth);
+  int motionBlur = 0;
+    do {
+    #pragma omp parallel for private(pixelValue)
+    for(int y = 0; y < h; y++) {
+      // Percentage completion!!
+      fprintf(stderr,"\r%5.2f%%",100.*y/(h-1));
+      for(int x = 0; x < w; x++ ) {
+	// Start from top left to bottm right of the screen.
+	int idx = (h - y - 1) * w + x;
+	pixelValue = Vec();
+	for (int k = 0; k < ANTIALIASING; k++) {
+	  int depth = 2;
+	  // Shoot ray from camera thur each pixel: Computed as: camera direction +/- deviation from camera direction in terms of pixel pitch.
+	  Vec cameraRayDir = cx * ( (double(x) + x_alias[k])/w - .5) + cy * ((double(y) + y_alias[k])/h - .5) + camera.d;
+	  // Find color of intersection. In case no intersection is found color the pixel black.
+	  pixelValue = pixelValue + shade(Ray(camera.o, cameraRayDir.norm()), depth);
+	}
+	pixelValue = pixelValue / ANTIALIASING;
+	// Clamp the rgb values.
+	pixelColors[idx] = pixelColors[idx] + Vec(pixelValue.x, pixelValue.y, pixelValue.z);
       }
-      pixelValue = pixelValue / ANTIALIASING;
-      // Clamp the rgb values.
-      pixelColors[idx] = Vec(clamp(pixelValue.x), clamp(pixelValue.y), clamp(pixelValue.z));
     }
-  }
+
+    for (int loop = 0; loop < nTriangles; loop++)
+      triangleList[loop].updatePos(Vec(5.0, 0, 5.0));
+    delete bvhAccel;
+    bvhAccel = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
+    bvhAccel -> initAccel();
+
+    motionBlur++;
+  } while (motionBlur < MOTIONBLUR);
 
   fprintf(stderr,"\n");
+
+  for(int y = 0; y < h; y++) {
+    for(int x = 0; x < w; x++ ) {
+      int idx = (h - y - 1) * w + x;
+      pixelColors[idx] = pixelColors[idx] / (double) MOTIONBLUR;
+      pixelColors[idx].x = clamp(pixelColors[idx].x);
+      pixelColors[idx].y = clamp(pixelColors[idx].y);
+      pixelColors[idx].z = clamp(pixelColors[idx].z);
+    }
+  }
 
   // Save pixelColors in ppm format.
   // hint: Google the PPM image format
