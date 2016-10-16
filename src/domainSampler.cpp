@@ -122,6 +122,7 @@ double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamp
 
     return 2 * PI * r * r;
 }
+
 // Cosine weighted surface sampling.
 double SphericalSampler::getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Vec *store) {
     seedMT(clock() & 0xFFFFFFFF);
@@ -157,6 +158,54 @@ double SphericalSampler::getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Ve
     }
 
     return PI;
+}
+
+// Get phong cosine lobe around w, centered at x0 with exponent e.
+double SphericalSampler::getPhongBRDFSamples(Vec n, Vec w, Vec x0, double e, int nSamples, Vec *store) {
+    seedMT(clock() & 0xFFFFFFFF);
+    int offset = randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
+    n.norm();
+    w.norm(); // Z - axis is transfomed to this axis.
+
+    Vec newX; // X - axis transfomed to this axis.
+    // Let's find a Vector perpendicular to w.
+    if (w.x != 0)
+      newX = Vec((-w.y-w.z)/w.x, 1.0, 1.0);
+    else if (w.y != 0)
+      newX = Vec(1.0,  -w.z/w.y, 1.0); // since w.x is zero, we can simplify 2nd dimension
+    else if (w.z != 0)
+      newX = Vec(1.0, 1.0, 0); // Since both w.x and w.y are zero.
+    else
+      fprintf (stderr, "WTF is w??\n");
+
+    newX.norm();
+
+    Vec newY = (w%newX).norm();
+
+    //Our transformation matrix is [newX, newY, w]
+    for (int i = 0, j = offset & 0xFFFFFFF0; i < nSamples; i++, j += 2) {
+      double e1 = randoms[j];
+      double e2 = randoms[j+1];
+      double costheta = pow((1.0 - e1), 1.0/(e + 1));
+      double theta = acos(costheta);
+      double phi = 2 * PI * e2;
+
+      double sintheta = sin(theta);
+      double cosphi = cos(phi);
+      double sinphi = sin(phi);
+      double x = sintheta * cosphi;
+      double y = sintheta * sinphi;
+      double z = costheta;
+
+      //Apply transformation, rotate
+      Vec sample = Vec(x * newX.x + y * newY.x + z * w.x,
+		       x * newX.y + y * newY.y + z * w.y,
+		       x * newX.z + y * newY.z + z * w.z);
+
+      store[i] = sample + x0;
+    }
+
+    return (e + 2)/(e + 1);
 }
 
 #define DEBUG_ARCSS 0

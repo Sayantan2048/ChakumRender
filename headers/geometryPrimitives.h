@@ -31,7 +31,7 @@ public:
   // Axis Aligned bounding box.
   AABBox box;
   // brdf
-  double brdf(Vec n, Vec wo, Vec wi, Vec x) const;
+  double brdf(Vec n, Vec wo, Vec wi, Vec x);
   BasePrimitive(Vec c_, double r_, MaterialType m_, AABBox b): c(c_), reflectance(r_), m(m_), box(b) {}
 };
 
@@ -64,7 +64,7 @@ public:
   // normal
   Vec n;
 
-  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = lambertian):
+  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = MaterialType(0.0, 0.0)):
     BasePrimitive(c_, r_, m_, AABBox::uNion(AABBox(A_, B_), C_)) {
 	  Vec c;
 	  A = A_;

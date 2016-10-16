@@ -8,17 +8,17 @@
 #include "bvhAccel.h"
 #include <iostream>
 
-int nSpheres = 1;
+int nSpheres = 3;
 Sphere sphereList[] = {
-  //Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25, .25), 1.0, lambertian),
-  //Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25, .25, .75), 1.0, lambertian),
-  //Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(.75, .75, .75), 1.0, lambertian),
-  Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, lambertian),
-  //Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(.75, .75, .75), 1.0, lambertian),
-  //Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 0.2, phong),
-  //Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 0.3, phong),
-  //Sphere(10,  Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian),
-  //Sphere(10,  Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian)
+  //Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25, .25), 1.0, MaterialType(1.0, 0.0)),
+  //Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25, .25, .75), 1.0, MaterialType(1.0, 0.0)),
+  //Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.0)),
+  Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.5)),
+  //Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.0)),
+  Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5)),
+  Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5)),
+  //Sphere(10,  Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.0)),
+  //Sphere(10,  Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.0))
 };
 int nTriangles = 0;
 #define X (45)
@@ -28,16 +28,18 @@ int nTriangles = 0;
 #define VB Vec(59 + X, 16.5 + Y, 99 + Z)
 #define VC Vec(55 + X, 50.5 + Y, 66 + Z)
 #define VD Vec(73 + X, 16.5 + Y, 78 + Z)
-Triangle *triangleList; // = {
- // Triangle(VA, VB, VC, Vec(0.0, 0, 0.9), 0.9, phong),
-//  Triangle(VB, VC, VD, Vec(0.9, 0.9, 0), 0.9, phong),
-//  Triangle(VC, VD, VA, Vec(0, 0.9, 0.9), 0.9, phong),
-//  Triangle(VD, VA, VB, Vec(0.9, 0.0, 0.9), 0.9, phong),
+Triangle * triangleList;
+Triangle customList[] = {
 
-//};
+ Triangle(VA, VB, VC, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5)),
+  Triangle(VB, VC, VD, Vec(0.9, 0.9, 0), 0.9, MaterialType(1.0, 0.5)),
+  Triangle(VC, VD, VA, Vec(0, 0.9, 0.9), 0.9, MaterialType(1.0, 0.5)),
+  Triangle(VD, VA, VB, Vec(0.9, 0.0, 0.9), 0.9, MaterialType(1.0, 0.5)),
+
+};
 
 int load() {
-  objLoader *objData = new objLoader();
+/*  objLoader *objData = new objLoader();
   objData->load("Aventador1.obj");
 
   nTriangles = objData->faceCount;
@@ -61,9 +63,11 @@ int load() {
 
 	// Assignment operator, data of Triangle() will be copied to triangleList[i].
 	// Triangle() object is however temporary.
-	triangleList[i] = Triangle(Av, Bv, Cv, Vec(1.0, 0.01, 0.01), 1.0, phong);
+	triangleList[i] = Triangle(Av, Bv, Cv, Vec(1.0, 0.01, 0.01), 1.0, MaterialType(2.2, 1.0));
 
-  }
+  }*/
+  nTriangles = 4;
+  triangleList = customList;
   bvhAccel = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
   bvhAccel -> initAccel();
 

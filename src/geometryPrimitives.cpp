@@ -4,15 +4,8 @@
 #include "materialTypes.h"
 #include <cstdio>
 
-double BasePrimitive::brdf(Vec n, Vec wo, Vec wi, Vec x) const {
-  if (m == lambertian)
-    return Lambertian::brdf() * reflectance;
-  else if (m == phong)
-    return Phong::brdf(n, wo, wi) * reflectance;
-  else
-      fprintf(stderr, "Invalid material type.\n");
-
-  return 0;
+double BasePrimitive::brdf(Vec n, Vec wo, Vec wi, Vec x) {
+  return m.brdf(n, wo, wi) * reflectance;
 }
 
 // Always return positve t or Does not intersect!!
