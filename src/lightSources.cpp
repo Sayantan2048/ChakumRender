@@ -6,8 +6,8 @@
 #include <cmath>
 #include "domainSampler.h"
 
-#define SAMPLES 		(40)
-#define SAMPLING_TYPE	 	16 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define SAMPLES 		(10)
+#define SAMPLING_TYPE	 	2 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 
 int nPointSources = 0;
 PointSource pSources[] = {

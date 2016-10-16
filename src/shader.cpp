@@ -80,26 +80,12 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
   return 1.0;
 }
 
-//Return pixel color
-inline Vec shadeSphere(const Ray &r,const Vec &x, const Vec &N, int id, Sphere *list) {
-  const Sphere &obj = list[id];
-  //Vec x1 = r.o + r.d * x; // Calulate the point of intersection.
-  //Vec n = (x - obj.p).norm(); // Since this is a sphere, normal is a vector form sphere center to point of intersection.
+// directIllumination shading
+inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
+  Vec light = getLightFromPointSources(r, N, x, list) +
+	getLightFromVolumeSources(r, N, x, list);
 
-  Vec light = getLightFromPointSources(r, N, x, &list[id]) +
-	getLightFromVolumeSources(r, N, x, &list[id]);
-
-  return obj.c.mult(light); // Compute color of intersection.
-}
-
-inline Vec shadeTriangle(const Ray &r,const Vec &x, const Vec &N, int id, Triangle *list) {
-  const Triangle &obj = list[id];
-  //Vec x = r.o + r.d * t; // Calulate the point of intersection.
-
-  Vec light = getLightFromPointSources(r, N, x, &list[id]) +
-	getLightFromVolumeSources(r, N, x, &list[id]);
-
-  return obj.c.mult(light); // Compute color of intersection.
+  return list->c.mult(light); // Compute color of intersection.
 }
 
 // R.d must be normalized before passing to shade.
@@ -120,8 +106,10 @@ Vec shade(const Ray &r, int &depth) {
   if (!(iSphere || iTriangle)) return Vec();
 
   Vec x = tS < tT ? r.o + r.d * tS : r.o + r.d * tT;
+  Vec n = tS < tT ? nS: nT;
+  BasePrimitive *ptr = tS < tT ? (BasePrimitive *)&sphereList[idS]: (BasePrimitive *)&triangleList[idT];
 
-  Vec directIllumination = (iSphere || iTriangle) ? (tS < tT? shadeSphere(r, x, nS, idS, sphereList) : shadeTriangle(r, x, nT, idT, triangleList)) :0;
+  Vec directIllumination = (iSphere || iTriangle) ? shadeDI(r, x, n, ptr) : 0;
 
   Ray secondaryRay(0,0);
 

@@ -2,6 +2,7 @@
 #define lightSources_h__
 #include "mathPrimitives.h"
 #include "geometryPrimitives.h"
+#include <vector>
 
 struct PointSource {
   Vec p;
@@ -36,6 +37,27 @@ struct VolumeSource {
 private:
   static const double eps = 0.001;
 };
+
+class LightSource {
+  std::vector<VolumeSource> vList;
+  std::vector<PointSource> pList;
+
+public:
+  LightSource() {
+    vList.reserve(5);
+    pList.reserve(5);
+  }
+  void addVSource(const VolumeSource &v) {
+    vList.push_back(v);
+  }
+  void addPSource(const PointSource &p) {
+    pList.push_back(p);
+  }
+  Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+};
+
+extern LightSource *lSource;
 
 extern Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
 extern Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
