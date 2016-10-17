@@ -76,8 +76,9 @@ AABBox::AABBox(const Vec &p1, const Vec &p2) {
 }
 
 AABBox::AABBox(const double &r, const Vec &p) {
-  pMin = Vec(p.x - 1.5 * r, p.y - 1.5 * r, p.z - 1.5 * r);
-  pMax = Vec(p.x + 1.5 * r, p.y + 1.5 * r, p.z + 1.5 * r);
+  double delta = (SQRT2 + 0.001) * r;
+  pMin = Vec(p.x - delta, p.y - delta, p.z - delta);
+  pMax = Vec(p.x + delta, p.y + delta, p.z + delta);
 }
 
 AABBox AABBox::uNion(const AABBox &b, const Vec &p) {

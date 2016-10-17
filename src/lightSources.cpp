@@ -33,9 +33,9 @@ void configureLightSources() {
   lSource = new LightSource();
   //lSource->addPSource(PointSource(Vec(50, 68.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)));
   //lSource->addPSource(PointSource(Vec(50, 40.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)));
-  lSource->addVSource(VolumeSource(Vec(10.0, 0.0, 0.0), Sphere(10, Vec(20, 40.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
-  lSource->addVSource(VolumeSource(Vec(0.0, 10.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
-  lSource->addVSource(VolumeSource(Vec(0.0, 0.0, 10.0), Sphere(10, Vec(35, 55.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
+  lSource->addSSource(SphereSource(Vec(10.0, 0.0, 0.0), Sphere(10, Vec(20, 40.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
+  lSource->addSSource(SphereSource(Vec(0.0, 10.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
+  lSource->addSSource(SphereSource(Vec(0.0, 0.0, 10.0), Sphere(10, Vec(35, 55.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
 }
 
 Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
@@ -73,7 +73,7 @@ Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec 
 
 #if SAMPLING_TYPE & 1
 
-Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
@@ -85,14 +85,14 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
-  for (uint32_t j = 0; j < vList.size(); j++) {
+  for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     for (int i = 0; i < SAMPLES; i++) {
       double d;
 
       rr.d = (samples[i] - x);
 
-      d = vList[j].p.intersect(rr);
+      d = sList[j].p.intersect(rr);
 
       if (d >= INF)
 	continue;
@@ -110,13 +110,13 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
 
       sum += (cosine * brdf);
     }
-    sumLight = sumLight + vList[j].radiance * ( pdf * sum/SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SAMPLES);
   }
   return sumLight;
 }
 
 #elif SAMPLING_TYPE & 2
-Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
@@ -126,10 +126,10 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
-  for (uint32_t j = 0; j < vList.size(); j++) {
+  for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
-    Vec w = vList[j].p.p - x;
-    double sinThetaMax = vList[j].p.r/w.length();
+    Vec w = sList[j].p.p - x;
+    double sinThetaMax = sList[j].p.r/w.length();
     // returns 1/pdf.
     double pdf = SphericalSampler::getSolidSurfaceSamples(w, x, asin(sinThetaMax), SAMPLES - 1, samples);
     samples[SAMPLES - 1] = x + w.norm();
@@ -138,7 +138,7 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
 
       rr.d = (samples[i] - x);
 
-      d = vList[j].p.intersect(rr);
+      d = sList[j].p.intersect(rr);
 
       if (d >= INF)
 	continue;
@@ -156,13 +156,13 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
 
       sum += (cosine * brdf);
     }
-    sumLight = sumLight + vList[j].radiance * ( pdf * sum/SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SAMPLES);
   }
   return sumLight;
 }
 
 #elif SAMPLING_TYPE & 4
-Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
@@ -172,10 +172,10 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
-  for (uint32_t j = 0; j < vList.size(); j++) {
+  for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     // returns 1/pdf.
-    double pdf = SphericalSampler::getLightSurfaceSample(vList[j].p.p, vList[j].p.r, x, SAMPLES, samples);
+    double pdf = SphericalSampler::getLightSurfaceSample(sList[j].p.p, sList[j].p.r, x, SAMPLES, samples);
 
     for (int i = 0; i < SAMPLES; i++) {
       double d;
@@ -189,7 +189,7 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
 
       cosine = rr.d.dot(n);
 
-      double cosine1 = rr.d.dot((samples[i] - vList[j].p.p).norm());
+      double cosine1 = rr.d.dot((samples[i] - sList[j].p.p).norm());
       cosine1 = cosine1 < 0 ? -cosine1 : 0;
 
       if (cosine < 0) {
@@ -201,13 +201,13 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
 
       sum += (cosine * cosine1 * brdf / (d * d));
     }
-    sumLight = sumLight + vList[j].radiance * ( pdf * sum/SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SAMPLES);
   }
   return sumLight;
 }
 #elif SAMPLING_TYPE & 8
 
-Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   double cosine = 0;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double eps = 1e-08;
@@ -219,14 +219,14 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
-  for (uint32_t j = 0; j < vList.size(); j++) {
+  for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     for (int i = 0; i < SAMPLES; i++) {
       double d;
 
       rr.d = (samples[i] - x);
 
-      d = vList[j].p.intersect(rr);
+      d = sList[j].p.intersect(rr);
 
       if (d >= INF)
 	continue;
@@ -245,13 +245,13 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
 
       sum += (brdf);
     }
-    sumLight = sumLight + vList[j].radiance * ( pdf * sum/SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SAMPLES);
   }
   return sumLight;
 }
 
 #else
-Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   double cosine = 0;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double eps = 1e-08;
@@ -264,14 +264,14 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
   // returns 1/pdf.
   double pdf = SphericalSampler::getPhongBRDFSamples(n, wr, x, primitive->m.phongExp, SAMPLES, samples);
 
-  for (uint32_t j = 0; j < vList.size(); j++) {
+  for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     for (int i = 0; i < SAMPLES; i++) {
       double d;
 
       rr.d = (samples[i] - x);
 
-      d = vList[j].p.intersect(rr);
+      d = sList[j].p.intersect(rr);
 
       if (d >= INF)
 	continue;
@@ -288,7 +288,7 @@ Vec LightSource::getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec
 
       sum += cosine;
     }
-    sumLight = sumLight + vList[j].radiance * ( pdf * sum/SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SAMPLES);
   }
   return sumLight;
 }

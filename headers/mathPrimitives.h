@@ -1,5 +1,6 @@
 #if !defined(mathPrimitives_h__)
 #define mathPrimitives_h__
+#define SQRT2 1.41421356
 #define PI 3.14159265359
 #define INF 1e20
 

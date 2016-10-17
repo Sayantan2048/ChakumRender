@@ -16,30 +16,30 @@ struct PointSource {
   }
 };
 
-struct VolumeSource {
+struct SphereSource {
   Vec radiance;
   Sphere p; //This sphere is not visible, if you want a visible sphere, put the sphere used in the constructor argument in the object list as well but with slightly smaller radii.
   Vec power;
-  VolumeSource(Sphere p_, Vec pw_): p(p_), power(pw_) {
+  SphereSource(Sphere p_, Vec pw_): p(p_), power(pw_) {
     radiance = power / (4 * PI * PI * p.r * p.r);
   }
 
-  VolumeSource(Vec r_, Sphere p_): radiance(r_), p(p_) {
+  SphereSource(Vec r_, Sphere p_): radiance(r_), p(p_) {
     power = radiance * ( 4 * PI * PI * p.r * p.r);
   }
 };
 
 class LightSource {
-  std::vector<VolumeSource> vList;
+  std::vector<SphereSource> sList;
   std::vector<PointSource> pList;
   static const double eps = 0.01;
 public:
   LightSource() {
-    vList.reserve(5);
+    sList.reserve(5);
     pList.reserve(5);
   }
-  void addVSource(const VolumeSource &v) {
-    vList.push_back(v);
+  void addSSource(const SphereSource &v) {
+    sList.push_back(v);
     Sphere p = v.p;
     p.r /= (1 + eps);
     p.m.radiance = v.radiance;
@@ -49,7 +49,7 @@ public:
     pList.push_back(p);
   }
   Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
-  Vec getLightFromVolumeSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
 };
 
 extern LightSource *lSource;
