@@ -8,7 +8,7 @@
 #include "bvhAccel.h"
 #define nPRIM_LEAF	1// See LinearBvhNode struct and check data-type of nPrimitives before changing this.
 
-BvhAccel *bvhAccel;
+BvhAccel *bvhAccelT, *bvhAccelS;
 
 void BvhAccel::initAccel() {
   totalNodes = 0;
@@ -148,7 +148,56 @@ void BvhAccel::flatten() {
   recursiveFlatten(root, &offset);
 }
 
-bool BvhAccel::intersect(const Ray &r, double &t, Vec &N, int &id) {
+bool BvhAccel::intersectS(const Ray &r, double &t, int &id) {
+  if (!nodes) return false;
+  bool hit = false;
+
+  Vec invDir(1.0 / r.d.x, 1.0 / r.d.y, 1.0 / r.d.z);
+  uint32_t dirIsNeg[3] = { invDir.x < 0, invDir.y < 0, invDir.z < 0 };
+
+  uint32_t todoOffset = 0, nodeNum = 0;
+  uint32_t todo[64];
+
+  double d;
+  id = 0xFFFFFFFF;
+  t = INF;
+
+  while (true) {
+    const LinearBvhNode *node = &nodes[nodeNum];
+    if (node->bounds.intersect(r) < INF) {
+	if (node->nPrimitives > 0) {
+	  for (uint32_t i = 0; i < node->nPrimitives; ++i) {
+	    Sphere * ptr = (Sphere *)(primitiveList + (node->primitivesOffset + i) * primActualSize);
+	    if ((d = ptr -> intersect(r)) && d < t) {
+	      t = d; // set the distance of intersection.
+	      id = node->primitivesOffset + i; // Set the serial no. of the intersecting sphere
+	      hit = true;
+	    }
+	  }
+	  if (todoOffset == 0) break;
+	  nodeNum = todo[--todoOffset];
+	}
+	else {
+	  if (dirIsNeg[node->axis]) {
+	    todo[todoOffset++] = nodeNum + 1;
+	    nodeNum = node->secondChildOffset;
+	  }
+	  else {
+	    todo[todoOffset++] = node->secondChildOffset;
+	    nodeNum = nodeNum + 1;
+	  }
+      }
+    }
+    else {
+      if (todoOffset == 0) break;
+      nodeNum = todo[--todoOffset];
+    }
+
+  }
+  return hit;
+}
+
+bool BvhAccel::intersectT(const Ray &r, double &t, Vec &N, int &id) {
   if (!nodes) return false;
   bool hit = false;
 

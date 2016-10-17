@@ -8,6 +8,8 @@
 #include "objects.h"
 #include "shader.h"
 #include "bvhAccel.h"
+#include "lightSources.h"
+#include <stdint.h>
 #include <omp.h>
 #include <cmath>
 #include <ctime>
@@ -26,7 +28,9 @@ inline int toDisplayValue(double x){ return int( pow( clamp(x), 1.0/2.2 ) * 255 
 
 int main(int argc, char *argv[]) {
   int w = 1920, h = 1080;
-  load();
+  loadObjects();
+  configureLightSources();
+  loadAccels();
   // camera location and direction of looking. Imagine right direction is x, up is y, and z is out of screen. Camera is mostly looking towards -z direction!!
   Ray camera( Vec(50, 50, 275.0), Vec(0, -0.05, -1).norm());
   //Define pixel pitch along width of the screen. Field of view is 30 + 30 or 60 degrees.
@@ -59,11 +63,11 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    for (int loop = 0; loop < nTriangles; loop++)
+    for (uint32_t loop = 0; loop < nTriangles; loop++)
       triangleList[loop].updatePos(Vec(5.0, 0, 5.0));
-    delete bvhAccel;
-    bvhAccel = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
-    bvhAccel -> initAccel();
+    delete bvhAccelT;
+    bvhAccelT = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
+    bvhAccelT -> initAccel();
 
     motionBlur++;
   } while (motionBlur < MOTIONBLUR);

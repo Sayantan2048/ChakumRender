@@ -12,7 +12,7 @@ struct AABBox {
   Vec pMin, pMax;
   AABBox(const Vec &p): pMin(p), pMax(p){}
   AABBox(const Vec &p1, const Vec &p2);
-  AABBox(const Vec &p, double r);
+  AABBox(const double &r, const Vec &p);
   static AABBox uNion(const AABBox &b, const Vec &p);
   static AABBox uNion(const AABBox &a, const AABBox &b);
   double intersect(const Ray &ray) const;
@@ -43,7 +43,9 @@ public:
   // position
   Vec p;
 
-  Sphere(double r_, Vec p_, Vec c_, double ref_, MaterialType m_): BasePrimitive(c_, ref_, m_, AABBox(p_, r)) {
+  Sphere(double r_ = 1.0, Vec p_ = Vec(0., 0., 0.),
+	 Vec c_ = Vec(0., 0., 0.), double ref_ = 0,
+	 MaterialType m_ = MaterialType(0., 0., NONE, Vec(0., 0., 0.))): BasePrimitive(c_, ref_, m_, AABBox(r_, p_)) {
     r = r_;
     p = p_;
   }
@@ -64,7 +66,7 @@ public:
   // normal
   Vec n;
 
-  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = MaterialType(0.0, 0.0)):
+  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = MaterialType(0.0, 0.0, NONE, Vec(0., 0., 0.))):
     BasePrimitive(c_, r_, m_, AABBox::uNion(AABBox(A_, B_), C_)) {
 	  Vec c;
 	  A = A_;

@@ -9,10 +9,11 @@
 #include "bvhAccel.h"
 #include <cmath>
 #include <cstdio>
+#include <iostream>
 
 // return true if there is an intersection of a ray with any of the spheres.
 static inline bool intersectSphere(const Ray &r, double &t, Vec &N, int &id, int nSpheres, Sphere *list) {
-  double d = INF;
+  /*double d = INF;
   id = 0xFFFFFFFF;
   t = INF;
 
@@ -32,7 +33,18 @@ static inline bool intersectSphere(const Ray &r, double &t, Vec &N, int &id, int
     N = N * -1.0;
 
   // return true if the intersection distance is finite.
-  return t < INF;
+  return t < INF;*/
+
+  bool hit = bvhAccelS->intersectS(r, t, id);
+ // if (hit) std::cerr<<"Oye Oye";
+  N = list[id].p - (r.o + r.d * t);
+  N.norm();
+
+  // Use a normal towards the viewer.
+  if (r.d.dot(N) > 0)
+    N = N * -1.0;
+
+  return hit;
 }
 
 // return true if there is an intersection of a ray with any of the spheres.
@@ -53,7 +65,7 @@ static inline bool intersectTriangle(const Ray &r, double &t, Vec &N, int &id, i
 
   // return true if the intersection distance is finite.
   return t < INF;*/
-  return bvhAccel->intersect(r, t, N, id);
+  return bvhAccelT->intersectT(r, t, N, id);
   //return DummyAccel::intersect(r, t, N, id, nTriangles, list);
 }
 
@@ -82,8 +94,8 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
-  Vec light = getLightFromPointSources(r, N, x, list) +
-	getLightFromVolumeSources(r, N, x, list);
+  Vec light = lSource->getLightFromPointSources(r, N, x, list) +
+	lSource->getLightFromVolumeSources(r, N, x, list);
 
   return list->c.mult(light); // Compute color of intersection.
 }
@@ -109,7 +121,9 @@ Vec shade(const Ray &r, int &depth) {
   Vec n = tS < tT ? nS: nT;
   BasePrimitive *ptr = tS < tT ? (BasePrimitive *)&sphereList[idS]: (BasePrimitive *)&triangleList[idT];
 
-  Vec directIllumination = (iSphere || iTriangle) ? shadeDI(r, x, n, ptr) : 0;
+  Vec hitLightSource = ptr->m.getRadiance(n, r.d * -1.0);
+
+  Vec directIllumination = (iSphere || iTriangle) ? ((ptr->m.l != NONE) ? hitLightSource : shadeDI(r, x, n, ptr)) : 0;
 
   Ray secondaryRay(0,0);
 

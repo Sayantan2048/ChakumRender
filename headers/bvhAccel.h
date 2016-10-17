@@ -70,10 +70,11 @@ class BvhAccel {
 public:
    BvhAccel(uint8_t *list, uint32_t nP, std::size_t sz) : primitiveList(list), nPrimitives(nP), primActualSize(sz) {root = 0;}
    void initAccel(); // build the BVH tree and flatten it.
-   bool intersect(const Ray &r, double &t, Vec &N, int &id);
+   bool intersectT(const Ray &r, double &t, Vec &N, int &id);
+   bool intersectS(const Ray &r, double &t, int &id);
 
 };
 
-extern BvhAccel *bvhAccel;
+extern BvhAccel *bvhAccelT, *bvhAccelS; // Triangle and Sphere.
 
 #endif

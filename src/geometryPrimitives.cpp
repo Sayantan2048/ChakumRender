@@ -2,7 +2,7 @@
 #include "mathPrimitives.h"
 #include <cmath>
 #include "materialTypes.h"
-#include <cstdio>
+#include <iostream>
 
 double BasePrimitive::brdf(Vec n, Vec wo, Vec wi, Vec x) {
   return m.brdf(n, wo, wi) * reflectance;
@@ -75,9 +75,9 @@ AABBox::AABBox(const Vec &p1, const Vec &p2) {
   pMax = Vec(maX(p1.x, p2.x), maX(p1.y, p2.y), maX(p1.z, p2.z));
 }
 
-AABBox::AABBox(const Vec &p, double r) {
-  pMin = Vec(p.x - r, p.y - r, p.z - r);
-  pMax = Vec(p.x + r, p.y + r, p.z + r);
+AABBox::AABBox(const double &r, const Vec &p) {
+  pMin = Vec(p.x - 1.5 * r, p.y - 1.5 * r, p.z - 1.5 * r);
+  pMax = Vec(p.x + 1.5 * r, p.y + 1.5 * r, p.z + 1.5 * r);
 }
 
 AABBox AABBox::uNion(const AABBox &b, const Vec &p) {

@@ -6,21 +6,28 @@
 #include "transformations.h"
 #include "dummyAccel.h"
 #include "bvhAccel.h"
+#include "lightSources.h"
+#include <vector>
 #include <iostream>
 
-int nSpheres = 3;
-Sphere sphereList[] = {
+std::vector<Sphere> vSphereList;
+std::vector<Triangle> vTriangleList;
+
+uint32_t nSpheres = 3;
+Sphere *sphereList;
+/*Sphere sphereList[] = {
   //Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25, .25), 1.0, MaterialType(1.0, 0.0)),
   //Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25, .25, .75), 1.0, MaterialType(1.0, 0.0)),
   //Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.0)),
-  Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.5)),
+  ,
   //Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.0)),
   Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5)),
   Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5)),
   //Sphere(10,  Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.0)),
   //Sphere(10,  Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.0))
-};
-int nTriangles = 0;
+};*/
+
+uint32_t nTriangles = 0;
 #define X (45)
 #define Y 0
 #define Z (-20)
@@ -29,17 +36,18 @@ int nTriangles = 0;
 #define VC Vec(55 + X, 50.5 + Y, 66 + Z)
 #define VD Vec(73 + X, 16.5 + Y, 78 + Z)
 Triangle * triangleList;
-Triangle customList[] = {
 
- Triangle(VA, VB, VC, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5)),
-  Triangle(VB, VC, VD, Vec(0.9, 0.9, 0), 0.9, MaterialType(1.0, 0.5)),
-  Triangle(VC, VD, VA, Vec(0, 0.9, 0.9), 0.9, MaterialType(1.0, 0.5)),
-  Triangle(VD, VA, VB, Vec(0.9, 0.0, 0.9), 0.9, MaterialType(1.0, 0.5)),
+void loadObjects() {
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  //vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  //vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
 
-};
+  vTriangleList.push_back(Triangle(VA, VB, VC, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  vTriangleList.push_back(Triangle(VB, VC, VD, Vec(0.9, 0.9, 0), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  vTriangleList.push_back(Triangle(VC, VD, VA, Vec(0, 0.9, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  vTriangleList.push_back(Triangle(VD, VA, VB, Vec(0.9, 0.0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
 
-int load() {
-/*  objLoader *objData = new objLoader();
+  /*  objLoader *objData = new objLoader();
   objData->load("Aventador1.obj");
 
   nTriangles = objData->faceCount;
@@ -66,10 +74,27 @@ int load() {
 	triangleList[i] = Triangle(Av, Bv, Cv, Vec(1.0, 0.01, 0.01), 1.0, MaterialType(2.2, 1.0));
 
   }*/
-  nTriangles = 4;
-  triangleList = customList;
-  bvhAccel = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
-  bvhAccel -> initAccel();
+
 
   //DummyAccel::initAccel(nTriangles, triangleList);
+}
+
+void loadAccels() {
+  nTriangles = vTriangleList.size();
+  triangleList = new Triangle[nTriangles];
+
+  for (uint32_t i = 0; i < nTriangles; i++)
+    triangleList[i] = vTriangleList[i];
+
+  bvhAccelT = new BvhAccel((uint8_t *)triangleList, nTriangles, (std::size_t)sizeof(Triangle));
+  bvhAccelT -> initAccel();
+
+  nSpheres = vSphereList.size();
+  sphereList = new Sphere[nSpheres];
+
+  for (uint32_t i = 0; i < nSpheres; i++)
+    sphereList[i] = vSphereList[i];
+
+  bvhAccelS = new BvhAccel((uint8_t *)sphereList, nSpheres, (std::size_t)sizeof(Sphere));
+  bvhAccelS -> initAccel();
 }
