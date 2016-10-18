@@ -27,6 +27,7 @@ struct SphereSource {
   SphereSource(Vec r_, Sphere p_): radiance(r_), p(p_) {
     power = radiance * ( 4 * PI * PI * p.r * p.r);
   }
+  SphereSource() {}
 };
 
 class LightSource {
@@ -47,6 +48,14 @@ public:
   }
   void addPSource(const PointSource &p) {
     pList.push_back(p);
+  }
+  SphereSource* getSphereSourcePtr(uint32_t &nSources) {
+    nSources = sList.size();
+    SphereSource *ptr = new SphereSource[sList.size()];
+    for (uint32_t i = 0; i < sList.size(); i++)
+      ptr[i] = sList[i];
+
+    return ptr;
   }
   Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);

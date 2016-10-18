@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "bvhAccel.h"
 #include "lightSources.h"
+#include "mis.h"
 #include <stdint.h>
 #include <omp.h>
 #include <cmath>
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
   loadObjects();
   configureLightSources();
   loadAccels();
+  loadLightSampler();
   // camera location and direction of looking. Imagine right direction is x, up is y, and z is out of screen. Camera is mostly looking towards -z direction!!
   Ray camera( Vec(50, 50, 275.0), Vec(0, -0.05, -1).norm());
   //Define pixel pitch along width of the screen. Field of view is 30 + 30 or 60 degrees.

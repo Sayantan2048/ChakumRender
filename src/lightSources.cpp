@@ -3,13 +3,16 @@
 #include "shader.h"
 #include "objects.h"
 #include "geometryPrimitives.h"
+#include "mis.h"
 #include <iostream>
 #include <cmath>
 #include <stdint.h>
 #include "domainSampler.h"
 
-#define SAMPLES 		(10)
-#define SAMPLING_TYPE	 	4 // 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define SAMPLES 		(20)
+#define SAMPLING_TYPE	 	32// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+//16 for phong BRDF sampling.
+
 LightSource *lSource;
 /*
 int nPointSources = 0;
@@ -37,6 +40,8 @@ void configureLightSources() {
   lSource->addSSource(SphereSource(Vec(0.0, 10.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
   lSource->addSSource(SphereSource(Vec(0.0, 0.0, 10.0), Sphere(10, Vec(35, 55.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
 }
+
+
 
 Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   Vec refd; // direction from point toward light source
@@ -250,7 +255,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   return sumLight;
 }
 
-#else
+#elif SAMPLING_TYPE & 16
 Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   double cosine = 0;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
@@ -289,6 +294,49 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
       sum += cosine;
     }
     sumLight = sumLight + sList[j].radiance * ( pdf * sum/SAMPLES);
+  }
+  return sumLight;
+}
+#else
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
+  double cosine = 0;
+  double eps = 1e-08;
+  double brdf = 0;
+  Vec samples[100] = {0};
+  double weight[100] = {0};
+
+  uint32_t nSamples = lightSampler->getSamples(x, n, r.d, primitive->m.phongExp, samples, weight);
+
+  Vec sumLight = Vec();
+  rr.o = x + n * eps;
+
+  for (uint32_t j = 0; j < sList.size(); j++) {
+    double sum = 0;
+    for (int i = 0; i < nSamples; i++) {
+      double d;
+
+      rr.d = (samples[i] - x).norm();
+
+      d = sList[j].p.intersect(rr);
+
+      if (d >= INF)
+	continue;
+
+      if (shadow(rr, d) < 0.5)
+	continue;
+
+      cosine = rr.d.dot(n);
+
+      if (cosine < 0) {
+	continue;
+      }
+
+      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
+
+      sum += (cosine * brdf * weight[i]);
+    }
+    sumLight = sumLight + sList[j].radiance * sum;
   }
   return sumLight;
 }

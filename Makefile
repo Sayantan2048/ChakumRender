@@ -11,9 +11,9 @@ OBJ = $(ROOT)/src
 #make will look for files in these path apart from current location of makefile
 VPATH = $(SRC) $(INCLUDES) $(OBJ) $(ROOT)/externLib/sharedLib $(ROOT)/externLib/objectLoader
 
-main: domainSampler.o mathPrimitives.o random.o main.o materialTypes.o geometryPrimitives.o objects.o shader.o lightSources.o transformations.o dummyAccel.o bvhAccel.o libobjLoader.so.1.0.1
+main: domainSampler.o mathPrimitives.o random.o main.o materialTypes.o geometryPrimitives.o objects.o shader.o lightSources.o transformations.o dummyAccel.o bvhAccel.o mis.o libobjLoader.so.1.0.1
 	$(CC) $(CFLAGS) $(OBJ)/domainSampler.o $(OBJ)/mathPrimitives.o $(OBJ)/random.o $(OBJ)/materialTypes.o $(OBJ)/geometryPrimitives.o $(OBJ)/objects.o $(OBJ)/shader.o $(OBJ)/lightSources.o \
-	$(OBJ)/transformations.o $(OBJ)/dummyAccel.o $(OBJ)/bvhAccel.o $(OBJ)/main.o -L$(ROOT)/externLib/sharedLib/ -lobjLoader
+	$(OBJ)/transformations.o $(OBJ)/dummyAccel.o $(OBJ)/bvhAccel.o $(OBJ)/mis.o $(OBJ)/main.o -L$(ROOT)/externLib/sharedLib/ -lobjLoader
 
 main.o: main.cpp
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/main.cpp -o $(OBJ)/main.o
@@ -50,6 +50,9 @@ dummyAccel.o: dummyAccel.h dummyAccel.cpp
 
 bvhAccel.o: bvhAccel.cpp bvhAccel.h
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/bvhAccel.cpp -o $(OBJ)/bvhAccel.o
+
+mis.o: mis.cpp mis.h
+	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/mis.cpp -o $(OBJ)/mis.o
 
 libobjLoader.so.1.0.1: objLoader.o list.o objParser.o stringExtra.o
 	$(CC) $(CFLAGS) -shared -Wl,-soname,libobjLoader.so.1 -o $(ROOT)/externLib/sharedLib/libobjLoader.so.1.0.1  $(ROOT)/externLib/objectLoader/objLoader.o \
