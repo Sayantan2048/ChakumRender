@@ -41,14 +41,15 @@ void configureLightSources() {
   lSource->addSSource(SphereSource(Vec(0.0, 0.0, 10.0), Sphere(10, Vec(35, 55.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
 }
 
-
-
 Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   Vec refd; // direction from point toward light source
   Ray rr(0,0); // a ray from point toward light source.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
 
   Vec sumLight = Vec(0.0, 0.0, 0.0);
   for (uint32_t i = 0; i < pList.size(); i++) {
@@ -68,7 +69,7 @@ Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec 
 	continue;
     }
 
-    brdf = primitive->brdf(n, r.d * -1.0, refd, x);
+    brdf = primitive->brdf(n, wo_ref, refd, x);
 
     sumLight = sumLight + (pList[i].radiance(x) * (cosine * brdf));
   }
@@ -84,6 +85,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   double eps = 1e-08;
   double brdf = 0;
   Vec samples[SAMPLES] = {0};
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
 
   // returns 1/pdf.
   double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, SAMPLES, samples);
@@ -111,7 +115,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	continue;
       }
 
-      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, rr.d, x);
 
       sum += (cosine * brdf);
     }
@@ -130,6 +134,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
@@ -157,7 +164,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	  continue; // Color dark side of an object black.
       }
 
-      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, rr.d, x);
 
       sum += (cosine * brdf);
     }
@@ -176,6 +183,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
@@ -202,7 +212,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	  continue;
       }
 
-      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, rr.d, x);
 
       sum += (cosine * cosine1 * brdf / (d * d));
     }
@@ -223,6 +233,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   double pdf = SphericalSampler::getCosineSurfaceSamples(n, x, SAMPLES, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
@@ -246,7 +259,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	  continue;
       }
 
-      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, rr.d, x);
 
       sum += (brdf);
     }
@@ -265,9 +278,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
-  Vec wr =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   // returns 1/pdf.
-  double pdf = SphericalSampler::getPhongBRDFSamples(n, wr, x, primitive->m.phongExp, SAMPLES, samples);
+  double pdf = SphericalSampler::getPhongBRDFSamples(n, wo_ref, x, primitive->m.phongExp, SAMPLES, samples);
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
@@ -311,6 +324,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
+
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     for (int i = 0; i < nSamples; i++) {
@@ -332,7 +348,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	continue;
       }
 
-      brdf = primitive->brdf(n, r.d * -1.0, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, rr.d, x);
 
       sum += (cosine * brdf * weight[i]);
     }

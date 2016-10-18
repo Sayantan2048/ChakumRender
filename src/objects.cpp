@@ -39,8 +39,8 @@ Triangle * triangleList;
 
 void loadObjects() {
   vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
 
   vTriangleList.push_back(Triangle(VA, VB, VC, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   vTriangleList.push_back(Triangle(VB, VC, VD, Vec(0.9, 0.9, 0), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));

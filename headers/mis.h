@@ -4,10 +4,10 @@
 
 class MIS {
   uint32_t nSamples;
-  static const uint32_t nSoAnIS = 0; // No. of samples for solid angle importance sampling.
+  static const uint32_t nSoAnIS = 5; // No. of samples for solid angle importance sampling.
   static const uint32_t nSuArIS = 0; // No. of samples for surface area importance sampling.
   static const uint32_t nCoIS = 20; // Cosine weighted importance sampling.
-  static const uint32_t nPhBrIS = 10; // No. of phong brdf importance samples.
+  static const uint32_t nPhBrIS = 5; // No. of phong brdf importance samples.
 
   SphereSource *sList; // List of Sphere Sources
   uint32_t nSS; // No. of SphereSources
