@@ -15,7 +15,7 @@ public:
   }
   MaterialType(double pE, double sC, LightType ll, const Vec &rad) {
     phongExp = (pE >= 0) ? pE : -pE;
-    specularCoef = (specularCoef * ((specularCoef < 0)? -1.0: 1.0));
+    specularCoef = (sC * ((sC < 0)? -1.0: 1.0));
     specularCoef = specularCoef <= 1 ? specularCoef : 1;
     l = ll;
     radiance = rad;

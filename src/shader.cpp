@@ -35,7 +35,7 @@ static inline bool intersectSphere(const Ray &r, double &t, Vec &N, int &id, int
   // return true if the intersection distance is finite.
   return t < INF;*/
 
-  bool hit = bvhAccelS->intersectS(r, t, id);
+ bool hit = bvhAccelS->intersectS(r, t, id);
  // if (hit) std::cerr<<"Oye Oye";
   N = list[id].p - (r.o + r.d * t);
   N.norm();
@@ -102,15 +102,15 @@ inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list)
 
 // R.d must be normalized before passing to shade.
 Vec shade(const Ray &r, int &depth) {
-  double tS, tT;
-  int idS, idT;
+  double tS = INF, tT = INF;
+  int idS = 0, idT = 0;
   Vec nT, nS;
 
   if (depth == 0)
     return Vec();
 
   depth--;
-
+#if 1
   // Returns normalized N.
   bool iTriangle = intersectTriangle(r, tT, nT, idT, nTriangles, triangleList);
   bool iSphere = intersectSphere(r, tS, nS, idS, nSpheres, sphereList);
@@ -125,8 +125,57 @@ Vec shade(const Ray &r, int &depth) {
 
   Vec directIllumination = (iSphere || iTriangle) ? ((ptr->m.l != NONE) ? hitLightSource : shadeDI(r, x, n, ptr)) : 0;
 
-  Ray secondaryRay(0,0);
+  return directIllumination;
 
+#endif
+
+#if 0
+  Vec product = Vec(1.0, 1.0, 1.0);
+  Vec col = Vec();
+  Ray ri = r;
+
+  for (int i = 0; i < 1; i++) {
+    // Returns normalized N.
+    bool iTriangle = false; //intersectTriangle(ri, tT, nT, idT, nTriangles, triangleList);
+    bool iSphere = intersectSphere(ri, tS, nS, idS, nSpheres, sphereList);
+
+    if (!(iSphere || iTriangle)) {
+      col = Vec();
+      break;
+    }
+
+    Vec x = tS < tT ? ri.o + ri.d * tS : ri.o + ri.d * tT;
+    Vec n = tS < tT ? nS: nT;
+    BasePrimitive *ptr = tS < tT ? (BasePrimitive *)&sphereList[idS]: (BasePrimitive *)&triangleList[idT];
+
+    if ((iSphere || iTriangle)) {
+      if (ptr->m.l != NONE) {
+	//std::cout<<product.x <<" "<<product.y<<" "<<product.z<<"\n";
+	Vec hitLightSource = ptr->m.getRadiance(n, ri.d * -1.0);
+	col = hitLightSource.mult(product);
+	//std::cout<<col.x <<" "<<col.y<<" "<<col.z<<"\n";
+	break;
+      }
+      else {
+
+	Vec wo_ref =  n * 2.0 * (n.dot(ri.d * -1.0)) + ri.d;
+	wo_ref.norm();
+
+	Ray secondaryRay(0,0);
+	secondaryRay.o = x + n * 1e-6;
+	Vec sample[1];
+	double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, 1, sample);
+	secondaryRay.d = (sample[0] - x).norm();
+	double cosine = secondaryRay.d.dot(n);
+	double brdf = ptr->brdf(n, wo_ref, secondaryRay.d, x);
+	product = product * (pdf * cosine * brdf);
+	product = ptr->c.mult(product);
+	ri = secondaryRay;
+      }
+    }
+  }
+  return col;
+#endif
   // Indirect illumination.
   /*if (iSphere || iTriangle) {
     Vec sum = Vec(0, 0, 0);
@@ -181,7 +230,7 @@ Vec shade(const Ray &r, int &depth) {
     }
 
   }*/
-  return directIllumination;
+
 }
 
 

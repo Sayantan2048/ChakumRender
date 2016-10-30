@@ -13,7 +13,7 @@
 std::vector<Sphere> vSphereList;
 std::vector<Triangle> vTriangleList;
 
-uint32_t nSpheres = 3;
+uint32_t nSpheres = 0;
 Sphere *sphereList;
 /*Sphere sphereList[] = {
   //Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25, .25), 1.0, MaterialType(1.0, 0.0)),
@@ -38,14 +38,32 @@ uint32_t nTriangles = 0;
 Triangle * triangleList;
 
 void loadObjects() {
-  vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  /*vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  */
+  vSphereList.push_back(Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25 * 0, .25 * 0), 1.0, MaterialType(3.2, 1.0, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25 * 0, .25 * 0, .75), 1.0, MaterialType(3.2, 1.0, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 1.0, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 1.0, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(0*.75, .75, .75), 1.0, MaterialType(3.2, 1.0, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, MaterialType(3.2, 1.0, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(3.2, 1.0, NONE, Vec(0., 0., 0.))));
+  //Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(0, 0, 0), Vec(.75, .25, .25)),
+  //Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(0, 0, 0), Vec(.25, .25, .75)),
+  //Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0, 0, 0), Vec(.75, .75, .75)),
+  //Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(0, 0, 0), Vec(.75, .75, .75)),
+  //Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(0, 0, 0), Vec(.75, .75, .75)),
+  //Sphere(16.5,  Vec(27, 16.5, 47), Vec(0, 0, 0), Vec(.999, .999, .999)),
+  //Sphere(16.5,  Vec(73, 16.5, 78), Vec(0, 0, 0), Vec(.999, .999, .999) ),
+  //Sphere(10.5, Vec(50, 68.6 - .27, 81.6), Vec(400, 400, 400), Vec(1, 1, 1))
 
-  vTriangleList.push_back(Triangle(VA, VB, VC, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
-  vTriangleList.push_back(Triangle(VB, VC, VD, Vec(0.9, 0.9, 0), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
-  vTriangleList.push_back(Triangle(VC, VD, VA, Vec(0, 0.9, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
-  vTriangleList.push_back(Triangle(VD, VA, VB, Vec(0.9, 0.0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  //Dummy Triangle
+  vTriangleList.push_back(Triangle(VA + 1e6, VB + 1e6, VC + 1e6, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(VA, VB, VC, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(VB, VC, VD, Vec(0.9, 0.9, 0), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(VC, VD, VA, Vec(0, 0.9, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(VD, VA, VB, Vec(0.9, 0.0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
 
   /*  objLoader *objData = new objLoader();
   objData->load("Aventador1.obj");

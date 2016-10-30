@@ -205,7 +205,7 @@ double SphericalSampler::getPhongBRDFSamples(Vec n, Vec w, Vec x0, double e, int
       store[i] = sample + x0;
     }
 
-    return (e + 2)/(e + 1);
+    return 1; // For normalized phong.
 }
 
 #define DEBUG_ARCSS 0

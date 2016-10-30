@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 	for (int k = 0; k < ANTIALIASING; k++) {
 	  int depth = 2;
 	  // Shoot ray from camera thur each pixel: Computed as: camera direction +/- deviation from camera direction in terms of pixel pitch.
-	  Vec cameraRayDir = cx * ( (double(x) + x_alias[k])/w - .5) + cy * ((double(y) + y_alias[k])/h - .5) + camera.d;
+	  Vec cameraRayDir = cx * ( (double(x) + ((k<8)? x_alias[k] : 0))/w - .5) + cy * ((double(y) + ((k < 8)? y_alias[k] : 0))/h - .5) + camera.d;
 	  // Find color of intersection. In case no intersection is found color the pixel black.
 	  pixelValue = pixelValue + shade(Ray(camera.o, cameraRayDir.norm()), depth);
 	}
