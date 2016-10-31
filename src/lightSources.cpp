@@ -9,9 +9,9 @@
 #include <stdint.h>
 #include "domainSampler.h"
 
-#define SAMPLES 		(200)
-#define SAMPLING_TYPE	 	16// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
-//16 for phong BRDF sampling.
+#define SAMPLES 		(20)
+#define SAMPLING_TYPE	 	2// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+//16 for phong BRDF sampling(works only if all objects are pure phong!!).
 
 LightSource *lSource;
 /*

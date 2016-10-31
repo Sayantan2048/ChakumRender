@@ -15,7 +15,7 @@
 #include <cmath>
 #include <ctime>
 
-#define ANTIALIASING 1
+#define ANTIALIASING 50
 #define MOTIONBLUR   1
 
 double x_alias[] = {0.34, 0.86, 0.20, 0.86, 0.66, 0.34, 0.20, 0.66};
@@ -28,7 +28,7 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 inline int toDisplayValue(double x){ return int( pow( clamp(x), 1.0/2.2 ) * 255 + .5); }
 
 int main(int argc, char *argv[]) {
-  int w = 1920, h = 1080;
+  int w = 512, h = 384;
   loadObjects();
   configureLightSources();
   loadAccels();

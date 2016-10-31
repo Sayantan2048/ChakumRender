@@ -7,6 +7,7 @@
 #include "domainSampler.h"
 #include "dummyAccel.h"
 #include "bvhAccel.h"
+#include "random.h"
 #include <cmath>
 #include <cstdio>
 #include <iostream>
@@ -100,41 +101,109 @@ inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list)
   return list->c.mult(light); // Compute color of intersection.
 }
 
-// R.d must be normalized before passing to shade.
-Vec shade(const Ray &r, int &depth) {
+Vec shadeExplicit(const Ray &r) {
   double tS = INF, tT = INF;
   int idS = 0, idT = 0;
   Vec nT, nS;
 
-  if (depth == 0)
+  Vec col = Vec();
+  Ray ri = r;
+  std::vector<Vec> DI;
+  std::vector<Vec> TP;
+
+  DI.reserve(3);
+  TP.reserve(3);
+
+  // Returns normalized N.
+  bool iTriangle = intersectTriangle(ri, tT, nT, idT, nTriangles, triangleList);
+  bool iSphere = intersectSphere(ri, tS, nS, idS, nSpheres, sphereList);
+
+  if (!(iSphere || iTriangle))
     return Vec();
 
-  depth--;
-#if 1
-  // Returns normalized N.
-  bool iTriangle = intersectTriangle(r, tT, nT, idT, nTriangles, triangleList);
-  bool iSphere = intersectSphere(r, tS, nS, idS, nSpheres, sphereList);
-
-  if (!(iSphere || iTriangle)) return Vec();
-
-  Vec x = tS < tT ? r.o + r.d * tS : r.o + r.d * tT;
+  Vec x = tS < tT ? ri.o + ri.d * tS : ri.o + ri.d * tT;
   Vec n = tS < tT ? nS: nT;
   BasePrimitive *ptr = tS < tT ? (BasePrimitive *)&sphereList[idS]: (BasePrimitive *)&triangleList[idT];
 
-  Vec hitLightSource = ptr->m.getRadiance(n, r.d * -1.0);
+  if (ptr->m.l != NONE)
+    return ptr->m.getRadiance(n, ri.d * -1.0);
 
-  Vec directIllumination = (iSphere || iTriangle) ? ((ptr->m.l != NONE) ? hitLightSource : shadeDI(r, x, n, ptr)) : 0;
+  Vec x_new;
+  Vec n_new;
+  BasePrimitive *ptr_new;
 
-  return directIllumination;
+  for (int i = 0; i < 2; i++) {
+    double e = 0;//randomMTD(0, 1);
 
-#endif
+    DI.push_back(shadeDI(ri, x, n, ptr) * (e > 0.3?1/(1.0-e):1.0));
 
-#if 0
+    if (e > 0.3) {
+      TP.push_back(Vec());
+      break;
+    }
+
+    Vec wo_ref =  n * 2.0 * (n.dot(ri.d * -1.0)) + ri.d;
+    wo_ref.norm();
+    Ray secondaryRay(0,0);
+    secondaryRay.o = x + n * 1e-6;
+    Vec sample[1];
+    double pdf = 0;
+    int rayStatus = 1;
+
+    do {
+      rayStatus = 1;
+      pdf = SphericalSampler::getHemiSurfaceSamples(n, x, 1, sample);
+      secondaryRay.d = (sample[0] - x).norm();
+
+      iTriangle = intersectTriangle(secondaryRay, tT, nT, idT, nTriangles, triangleList);
+      iSphere = intersectSphere(secondaryRay, tS, nS, idS, nSpheres, sphereList);
+
+      if (!(iSphere || iTriangle)) {
+	rayStatus = 2; // Ray escapes scene
+	break;
+      }
+
+      x_new = tS < tT ? secondaryRay.o + secondaryRay.d * tS : secondaryRay.o + secondaryRay.d * tT; // Ch
+      n_new = tS < tT ? nS: nT; // Ch
+      ptr_new = tS < tT ? (BasePrimitive *)&sphereList[idS]: (BasePrimitive *)&triangleList[idT];
+
+      if (ptr_new->m.l != NONE)
+	rayStatus = 0;
+
+     } while (rayStatus == 0);
+
+     if (rayStatus == 2) {
+       	TP.push_back(Vec());
+	break;
+     }
+     double cosine = secondaryRay.d.dot(n);
+     double brdf = ptr->brdf(n, wo_ref, secondaryRay.d, x);
+     double product = (pdf * cosine * brdf);
+     TP.push_back(ptr->c*product);
+
+     ri = secondaryRay;
+     x = x_new;
+     n = n_new;
+     ptr = ptr_new;
+  }
+
+  col = DI[DI.size() -1];
+  for (int i = DI.size() - 2; i >= 0; i--) {
+    col = DI[i] + col.mult(TP[i]);
+  }
+  return col;
+}
+
+Vec shadeImplicit(const Ray &r) {
+  double tS = INF, tT = INF;
+  int idS = 0, idT = 0;
+  Vec nT, nS;
+
   Vec product = Vec(1.0, 1.0, 1.0);
   Vec col = Vec();
   Ray ri = r;
 
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 4; i++) {
     // Returns normalized N.
     bool iTriangle = false; //intersectTriangle(ri, tT, nT, idT, nTriangles, triangleList);
     bool iSphere = intersectSphere(ri, tS, nS, idS, nSpheres, sphereList);
@@ -175,62 +244,44 @@ Vec shade(const Ray &r, int &depth) {
     }
   }
   return col;
+
+}
+
+Vec shadeDirectOnly(const Ray &r) {
+  double tS = INF, tT = INF;
+  int idS = 0, idT = 0;
+  Vec nT, nS;
+
+  // Returns normalized N.
+  bool iTriangle = intersectTriangle(r, tT, nT, idT, nTriangles, triangleList);
+  bool iSphere = intersectSphere(r, tS, nS, idS, nSpheres, sphereList);
+
+  if (!(iSphere || iTriangle)) return Vec();
+
+  Vec x = tS < tT ? r.o + r.d * tS : r.o + r.d * tT;
+  Vec n = tS < tT ? nS: nT;
+  BasePrimitive *ptr = tS < tT ? (BasePrimitive *)&sphereList[idS]: (BasePrimitive *)&triangleList[idT];
+
+  Vec hitLightSource = ptr->m.getRadiance(n, r.d * -1.0);
+
+  Vec directIllumination = (iSphere || iTriangle) ? ((ptr->m.l != NONE) ? hitLightSource : shadeDI(r, x, n, ptr)) : 0;
+
+  return directIllumination;
+}
+
+// R.d must be normalized before passing to shade.
+Vec shade(const Ray &r, int &depth) {
+#if 0
+  return shadeDirectOnly(r);
 #endif
-  // Indirect illumination.
-  /*if (iSphere || iTriangle) {
-    Vec sum = Vec(0, 0, 0);
-    if (tS < tT) {
-      secondaryRay.o = r.o + r.d * tS;
-      n = (secondaryRay.o - sphereList[idS].p).norm();
-      if (n.dot(ray.d))
-      secondaryRay.o = secondaryRay.o + n * 1e-06;
-      secondaryRay.d = n;*/
-     /* Vec *samples = new Vec[100];
-      double pdf = SphericalSampler::getHemiSurfaceSamples(n, secondaryRay.o, 100, samples);
-      for (int i = 0; i < 100; i++) {
-	int depth2 = depth;
-	secondaryRay.d = samples[i] - secondaryRay.o;
-	sum  = sum + ((sphereList[idS].m == phong)? shade(secondaryRay, depth2) : Vec());
-      }
-      delete []samples;*/
-     /*int depth2 = depth;
-     sum = shade(secondaryRay, depth2);
-     secondaryRay.d = (n + r.d * -1.0).norm();
-     depth2 = depth;
-     sum = sum + shade(secondaryRay, depth2);
-     secondaryRay.d = (n + r.d * -1.5).norm();
-     depth2 = depth;
-     sum = sum + shade(secondaryRay, depth2);
-     secondaryRay.d = (n + r.d * -2.5).norm();
-     depth2 = depth;
-     sum = sum + shade(secondaryRay, depth2);
-     // fprintf(stderr, "%f %f %f\n", sum.x, sum.y, sum.z);
-      //return shadeSphere(r, tS, idS, sphereList) + sum * 0.25 * 0.2;
-    }*/
-    /*else {
-      secondaryRay.o = r.o + r.d * tT;
-      secondaryRay.o = secondaryRay.o + n * 1e-06;
-      secondaryRay.d = n;
-     int depth2 = depth;
-     sum = shade(secondaryRay, depth2);
-     secondaryRay.d = (n + r.d * -1.0).norm();
-     depth2 = depth;
-     sum = sum + shade(secondaryRay, depth2);
-     secondaryRay.d = (n + r.d * -1.5).norm();
-     depth2 = depth;
-     sum = sum + shade(secondaryRay, depth2);
-     secondaryRay.d = (n + r.d * -2.5).norm();
-     depth2 = depth;
-     sum = sum + shade(secondaryRay, depth2);
-    // if (r.d.dot(n)>0)
-    // fprintf(stderr, "%f %f %f\n", sum.x, sum.y, r.d.dot(n)    );
-      return shadeTriangle(r, tT, n, idT, triangleList) + sum * 0.25 * 0.7;
 
+#if 0
+  return shadeImplicit(r);
+#endif
 
-    }
-
-  }*/
-
+#if 1
+  return shadeExplicit(r);
+#endif
 }
 
 
