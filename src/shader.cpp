@@ -36,8 +36,10 @@ static inline bool intersectSphere(const Ray &r, double &t, Vec &N, int &id, int
   // return true if the intersection distance is finite.
   return t < INF;*/
 
- bool hit = bvhAccelS->intersectS(r, t, id);
- // if (hit) std::cerr<<"Oye Oye";
+  bool hit = bvhAccelS->intersectS(r, t, id);
+  // if (hit) std::cerr<<"Oye Oye";
+  if (!hit) return hit;
+
   N = list[id].p - (r.o + r.d * t);
   N.norm();
 
@@ -96,7 +98,7 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
   Vec light = lSource->getLightFromPointSources(r, N, x, list) +
-	lSource->getLightFromSphereSources(r, N, x, list);
+	lSource->getLightFromSphereSources(r, N, x, list) + lSource->getLightFromEnvSource(r, N, x, list);
 
   return list->c.mult(light); // Compute color of intersection.
 }
@@ -271,7 +273,7 @@ Vec shadeDirectOnly(const Ray &r) {
 
 // R.d must be normalized before passing to shade.
 Vec shade(const Ray &r, int &depth) {
-#if 0
+#if 1
   return shadeDirectOnly(r);
 #endif
 
@@ -279,7 +281,7 @@ Vec shade(const Ray &r, int &depth) {
   return shadeImplicit(r);
 #endif
 
-#if 1
+#if 0
   return shadeExplicit(r);
 #endif
 }

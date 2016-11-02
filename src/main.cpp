@@ -10,12 +10,13 @@
 #include "bvhAccel.h"
 #include "lightSources.h"
 #include "mis.h"
+#include "ppm.h"
 #include <stdint.h>
 #include <omp.h>
 #include <cmath>
 #include <ctime>
 
-#define ANTIALIASING 50
+#define ANTIALIASING 1
 #define MOTIONBLUR   1
 
 double x_alias[] = {0.34, 0.86, 0.20, 0.86, 0.66, 0.34, 0.20, 0.66};
@@ -97,11 +98,26 @@ int main(int argc, char *argv[]) {
   }
   fclose(f);
 
-  delete pixelColors;
+  delete []pixelColors;
 
   return 0;
 }
 /*
 int main() {
-  SphericalSampler::getArcSurfaceSamples(Vec(1.0, -1.0, 1.0), Vec(), PI/15.0, 20);
+  uint32_t w, h;
+  Vec *image;
+  readImage(image, w, h);
+  EnvSource s1(image, w, h, Vec(10,10,10), 1);
+  Vec *lightMap = new Vec[360 * 180];
+
+  for (uint32_t theta = 0; theta < 180; theta++)
+    for (uint32_t phi = 0; phi < 360; phi++) {
+      double x = sin(theta * PI / 180.0) * cos(phi * PI / 180.0);
+      double y = cos(theta * PI / 180.0);
+      double z = sin(theta * PI / 180.0) * sin(phi * PI / 180.0);
+      std::cout<<theta * PI /180.0<<" "<<phi * PI / 180.0<<" ";
+      lightMap[theta * 360 + phi] = s1.getRadiance(Vec(x, y, z)) / 10;
+    }
+
+  writeImage(lightMap, 360, 180);
 }*/
