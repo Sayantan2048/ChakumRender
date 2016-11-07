@@ -16,7 +16,7 @@
 #include <cmath>
 #include <ctime>
 
-#define ANTIALIASING 1
+#define ANTIALIASING 200
 #define MOTIONBLUR   1
 
 double x_alias[] = {0.34, 0.86, 0.20, 0.86, 0.66, 0.34, 0.20, 0.66};
@@ -34,10 +34,13 @@ int main(int argc, char *argv[]) {
   configureLightSources();
   loadAccels();
   loadLightSampler();
-  // camera location and direction of looking. Imagine right direction is x, up is y, and z is out of screen. Camera is mostly looking towards -z direction!!
   Ray camera( Vec(50, 50, 275.0), Vec(0, -0.05, -1).norm());
-  //Define pixel pitch along width of the screen. Field of view is 30 + 30 or 60 degrees.
   Vec cx = Vec( w * 0.57735 / h, 0., 0.1); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
+  //Veach
+  // camera location and direction of looking. Imagine right direction is x, up is y, and z is out of screen. Camera is mostly looking towards -z direction!!
+  //Ray camera( Vec(50 * 0, 50 * 4, 275.0 * 2), Vec(0, -0.05 * 10, -1).norm());
+  //Define pixel pitch along width of the screen. Field of view is 30 + 30 or 60 degrees.
+  //Vec cx = Vec( w * 0.57735 / h, 0., 0.1 * 0); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
   //Define pixel pitch along height of the screen.
   Vec cy = (cx % camera.d).norm() * 0.57735;
   // 2D Array of pixels

@@ -43,12 +43,16 @@ void configureLightSources() {
   //lSource->addPSource(PointSource(Vec(50, 40.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)));
   //lSource->addSSource(SphereSource(Vec(10.0, 0.0, 0.0), Sphere(10, Vec(20, 40.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(0.0, 10.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
-  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
-
-  uint32_t w, h;
+  lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
+  //Veach Scene
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(5, Vec(-50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(1, Vec(-150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
+  /*uint32_t w, h;
   Vec *image;
   readImage(image, w, h);
-  lSource->addESource(EnvSource(image, w, h, Vec(1,1,1), 1));
+  lSource->addESource(EnvSource(image, w, h, Vec(1,1,1), 1));*/
   //delete image.
 }
 
@@ -153,7 +157,7 @@ Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x,
     brdf = primitive->brdf(n, wo_ref, rr.d, x);
     Vec L = eS[0].getRadiance(rr.d);
     double pdf = to_greyScale(L);
-    //std::cout<<pdf<<"\n";
+
     if(pdf > eps)
       sumLight = sumLight + (L * cosine * brdf)/pdf;
   }
@@ -645,9 +649,9 @@ void EnvSource::initSamples() {
     double e2 = randomMTD(0, 1);
 
     uint32_t thetaIdx = invMarginalCDF[(uint32_t)(e1 * pdfSamples)];
-    double theta =  thetaIdx * (PI / height);
+    double theta =  thetaIdx * (PI / marginalSamples);
     uint32_t phiIdx = invConditionalCDF[thetaIdx * pdfSamples + (uint32_t)(e2 * pdfSamples)];
-    double phi = phiIdx *  (2.0 * PI) / width;
+    double phi = phiIdx *  (2.0 * PI) / conditionalSamples;
 
     double x = sin(theta);
     double y = x;

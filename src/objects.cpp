@@ -30,7 +30,7 @@ Sphere *sphereList;
 uint32_t nTriangles = 0;
 #define X (45)
 #define Y 0
-#define Z (-20)
+#define Z (-150)
 #define VA Vec(27 + X, 16.5 + Y, 47 + Z)
 #define VB Vec(59 + X, 16.5 + Y, 99 + Z)
 #define VC Vec(55 + X, 50.5 + Y, 66 + Z)
@@ -42,14 +42,15 @@ void loadObjects() {
   vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   */
-//  vSphereList.push_back(Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25 * 0, .25 * 0), 1.0, MaterialType(3.2, .6, NONE, Vec(0., 0., 0.))));
- // vSphereList.push_back(Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25 * 0, .25 * 0, .75), 1.0, MaterialType(3.2, .6, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 0.6, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 0.6, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(0*.75, .75, .75), 1.0, MaterialType(3.2, 0.6, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1, NONE, Vec(0., 0., 0.))));
-  vSphereList.push_back(Sphere(60,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25 * 0, .25 * 0), 1.0, MaterialType(3.2, .6, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25 * 0, .25 * 0, .75), 1.0, MaterialType(3.2, .6, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 0.6, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 0.6, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(0*.75, .75, .75), 1.0, MaterialType(3.2, 0.6, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1, NONE, Vec(0., 0., 0.))));
+  //Dummy
+ // vSphereList.push_back(Sphere(1,  Vec(27, 1e5, 47), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1, NONE, Vec(0., 0., 0.))));
   //Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(0, 0, 0), Vec(.75, .25, .25)),
   //Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(0, 0, 0), Vec(.25, .25, .75)),
   //Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0, 0, 0), Vec(.75, .75, .75)),
@@ -61,6 +62,13 @@ void loadObjects() {
 
   //Dummy Triangle
   vTriangleList.push_back(Triangle(VA + 1e6, VB + 1e6, VC + 1e6, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
+  //Eric Veach Scene
+  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 100), Vec(5000, -30, 300 - 100), Vec(5000, -30, 200 - 100), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(200000.0, 1, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 100), Vec(-5000, -30, 200 - 100), Vec(5000, -30, 200 - 100), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(200000.0, 1, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 150), Vec(5000, -30, 300 - 150), Vec(5000, -30, 200 - 150), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(20.0, 1, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 150), Vec(-5000, -30, 200 - 150), Vec(5000, -30, 200 - 150), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(20.0, 1, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 5000 + Z), Vec(5000, -30, 5000 + Z), Vec(5000, -30, -5000 + Z), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(20.0, 1, NONE, Vec(0., 0., 0.))));
+  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 5000 + Z), Vec(-5000, -30, -5000 + Z), Vec(5000, -30, -5000 + Z), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(20.0, 1, NONE, Vec(0., 0., 0.))));
   //vTriangleList.push_back(Triangle(VA, VB, VC, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   //vTriangleList.push_back(Triangle(VB, VC, VD, Vec(0.9, 0.9, 0), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   //vTriangleList.push_back(Triangle(VC, VD, VA, Vec(0, 0.9, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));

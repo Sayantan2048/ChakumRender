@@ -1,6 +1,6 @@
 CC = g++
 ASAN = -g3 -O0 -fno-omit-frame-pointer -fsanitize=address
-CFLAGS = -Wall $(ASAN)
+CFLAGS = -Wall -fopenmp
 ROOT=$(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 INCLUDES = $(ROOT)/headers

@@ -104,6 +104,7 @@ inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list)
 }
 
 Vec shadeExplicit(const Ray &r) {
+  double terminationProbability = 0.3;
   double tS = INF, tT = INF;
   int idS = 0, idT = 0;
   Vec nT, nS;
@@ -134,12 +135,12 @@ Vec shadeExplicit(const Ray &r) {
   Vec n_new;
   BasePrimitive *ptr_new;
 
-  for (int i = 0; i < 2; i++) {
-    double e = 0;//randomMTD(0, 1);
+  for (int i = 0; i < 100; i++) {
+    double e = randomMTD(0, 1);
 
-    DI.push_back(shadeDI(ri, x, n, ptr) * (e > 0.3?1/(1.0-e):1.0));
+    DI.push_back(shadeDI(ri, x, n, ptr));
 
-    if (e > 0.3) {
+    if (e < terminationProbability) {
       TP.push_back(Vec());
       break;
     }
@@ -191,7 +192,7 @@ Vec shadeExplicit(const Ray &r) {
 
   col = DI[DI.size() -1];
   for (int i = DI.size() - 2; i >= 0; i--) {
-    col = DI[i] + col.mult(TP[i]);
+    col = DI[i] + col.mult(TP[i]) / (1 - terminationProbability);
   }
   return col;
 }
@@ -207,7 +208,7 @@ Vec shadeImplicit(const Ray &r) {
 
   for (int i = 0; i < 4; i++) {
     // Returns normalized N.
-    bool iTriangle = false; //intersectTriangle(ri, tT, nT, idT, nTriangles, triangleList);
+    bool iTriangle = intersectTriangle(ri, tT, nT, idT, nTriangles, triangleList);
     bool iSphere = intersectSphere(ri, tS, nS, idS, nSpheres, sphereList);
 
     if (!(iSphere || iTriangle)) {
@@ -246,7 +247,6 @@ Vec shadeImplicit(const Ray &r) {
     }
   }
   return col;
-
 }
 
 Vec shadeDirectOnly(const Ray &r) {
@@ -273,7 +273,7 @@ Vec shadeDirectOnly(const Ray &r) {
 
 // R.d must be normalized before passing to shade.
 Vec shade(const Ray &r, int &depth) {
-#if 1
+#if 0
   return shadeDirectOnly(r);
 #endif
 
@@ -281,7 +281,7 @@ Vec shade(const Ray &r, int &depth) {
   return shadeImplicit(r);
 #endif
 
-#if 0
+#if 1
   return shadeExplicit(r);
 #endif
 }
