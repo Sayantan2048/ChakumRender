@@ -105,10 +105,17 @@ struct SphereSource {
   SphereSource() {}
 };
 
+struct TriLight {
+  Triangle t;
+  Vec radiance;
+  TriLight(const Triangle &t_, const Vec rad): t(t_), radiance(rad){}
+};
+
 class LightSource {
   std::vector<SphereSource> sList;
   std::vector<PointSource> pList;
   std::vector<EnvSource> eS;
+  std::vector<TriLight> tList;
   static const double eps = 0.01;
 public:
   LightSource() {
@@ -129,6 +136,9 @@ public:
   void addESource(const EnvSource &e) {
     eS.push_back(e);
   }
+  void addTSource(const TriLight &t) {
+    tList.push_back(t);
+  }
   SphereSource* getSphereSourcePtr(uint32_t &nSources) {
     nSources = sList.size();
     SphereSource *ptr = new SphereSource[sList.size()];
@@ -139,6 +149,7 @@ public:
   }
   Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
 };
 

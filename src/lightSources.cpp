@@ -17,6 +17,9 @@
 //16 for phong BRDF sampling(works only if all objects are pure phong!!).
 #define ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
 #define ENV_SAMPLING_TYPE	1// 1 for Uniform hemispherical sampling, 2 Importance sampling.
+
+#define TRI_SAMPLES 		1000
+
 static double to_greyScale(Vec L);
 LightSource *lSource;
 /*
@@ -54,7 +57,9 @@ void configureLightSources() {
   readImage(image, w, h);
   lSource->addESource(EnvSource(image, w, h, Vec(1,1,1), 1));*/
   //delete image.
-}
+  /*lSource->addTSource(TriLight(
+    Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(30, 68, 100), , Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+*/}
 
 Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   Vec refd; // direction from point toward light source
@@ -91,6 +96,52 @@ Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec 
 
   return sumLight;
 }
+
+Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
+  double cosine = 0;
+  double eps = 1e-08;
+  double brdf = 0;
+  Vec samples[TRI_SAMPLES] = {0};
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
+
+  // returns 1/pdf.
+  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, TRI_SAMPLES, samples);
+  Vec sumLight = Vec();
+  rr.o = x + n * eps;
+  Vec dummy;
+  for (uint32_t j = 0; j < tList.size(); j++) {
+    double sum = 0;
+    for (int i = 0; i < TRI_SAMPLES; i++) {
+      double d;
+
+      rr.d = (samples[i] - x);
+
+      d = tList[j].t.intersect(rr, dummy);
+
+      if (d >= INF)
+	continue;
+
+      if (shadow(rr, d) < 0.5)
+	continue;
+
+      cosine = rr.d.dot(n);
+
+      if (cosine < 0) {
+	continue;
+      }
+
+      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+
+      sum += (cosine * brdf);
+    }
+    sumLight = sumLight + tList[j].radiance * ( pdf * sum/TRI_SAMPLES);
+  }
+  return sumLight;
+}
+
 #if ENV_SAMPLING_TYPE & 1
 Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   if (eS.size() < 1) return Vec();

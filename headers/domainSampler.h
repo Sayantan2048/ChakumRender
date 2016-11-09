@@ -2,7 +2,7 @@
 #define domainSampler_h__
 
 #include "mathPrimitives.h"
-
+#include <stdint.h>
 #define nSAMPLES 1000
 
 class SphericalSampler {
@@ -26,6 +26,7 @@ class SphericalSampler {
   static double getLightSurfaceSample(Vec c, double r, Vec x, int nSamples, Vec *store);
   static double getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Vec *store);
   static double getPhongBRDFSamples(Vec n, Vec w, Vec x0, double e, int nSamples, Vec *store);
+  static double getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, uint32_t nSamples, Vec *store);
   static void getDistribution(Vec n, Vec x, int nSamples, Vec *samples);
 };
 

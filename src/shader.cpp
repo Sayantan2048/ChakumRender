@@ -273,7 +273,7 @@ Vec shadeDirectOnly(const Ray &r) {
 
 // R.d must be normalized before passing to shade.
 Vec shade(const Ray &r, int &depth) {
-#if 0
+#if 1
   return shadeDirectOnly(r);
 #endif
 
@@ -281,7 +281,7 @@ Vec shade(const Ray &r, int &depth) {
   return shadeImplicit(r);
 #endif
 
-#if 1
+#if 0
   return shadeExplicit(r);
 #endif
 }
