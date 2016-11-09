@@ -65,7 +65,7 @@ public:
   Vec A, B, C;
   // normal
   Vec n;
-
+  double area;
   Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = MaterialType(0.0, 0.0, NONE, Vec(0., 0., 0.))):
     BasePrimitive(c_, r_, m_, AABBox::uNion(AABBox(A_, B_), C_)) {
 	  Vec c;
@@ -75,6 +75,7 @@ public:
 	  n = (B - A);
 	  c = (C - A);
 	  n = c%n;
+	  area = 0.5 * n.length();
 	  n.norm();
   }
   void updatePos(Vec vel = Vec(0., 0., 0.), Vec acc = Vec(0.,0.,0.)) {
@@ -87,6 +88,7 @@ public:
     Vec c = (B - A);
     n = (C - A);
     n = c%n;
+    area = 0.5 * n.length();
     n.norm();
 
     box = AABBox::uNion(AABBox(A, B), C);

@@ -123,12 +123,9 @@ double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamp
     return 2 * PI * r * r;
 }
 
-double SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, uint32_t nSamples, Vec *store) {
+void SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, uint32_t nSamples, Vec *store) {
     seedMT(clock() & 0xFFFFFFFF);
     uint32_t offset = randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
-
-    Vec side1 = p2 - p1;
-    Vec side2 = p3 - p1;
 
     for (uint32_t i = 0, j = offset & 0xFFFFFFF0; i < nSamples; i++, j += 2) {
       double e1 = sqrt(randoms[j]);
@@ -138,8 +135,6 @@ double SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2,
 		 p2 * e1 * (1.0 - e2) +
 		 p3 * e2 * e1;
     }
-
-    return (side1%side2).length() * 0.5;
 }
 
 // Cosine weighted surface sampling.

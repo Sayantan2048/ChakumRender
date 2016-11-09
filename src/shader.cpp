@@ -79,13 +79,14 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
   // WARNING: SHADWO FROM ANY MaterialType AND ANY PRIMITIVE
   double t;
   int id;
+  double eps = 1e-5;//Avoid shadow due to self-intersection with light source.
   Vec N;
   if (intersectSphere(shadowRay, t, N, id, nSpheres, sphereList))
-    if (t < distanceLightSource) // Check whether the object is closer than light source.
+    if (t + eps < distanceLightSource) // Check whether the object is closer than light source.
       return 0.0;
 
   if (intersectTriangle(shadowRay, t, N, id, nTriangles, triangleList))
-    if (t < distanceLightSource) // Check whether the object is closer than light source.
+    if (t + eps < distanceLightSource) // Check whether the object is closer than light source.
       return 0.0;
   /*.
    * TODO.
@@ -98,8 +99,8 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
   Vec light = lSource->getLightFromPointSources(r, N, x, list) +
-	lSource->getLightFromSphereSources(r, N, x, list) + lSource->getLightFromEnvSource(r, N, x, list);
-
+	lSource->getLightFromSphereSources(r, N, x, list) + lSource->getLightFromEnvSource(r, N, x, list)
+	+ lSource->getLightFromTriSources(r, N, x, list) + lSource->getLightFromMeshSources(r, N, x, list);
   return list->c.mult(light); // Compute color of intersection.
 }
 

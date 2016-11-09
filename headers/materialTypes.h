@@ -1,7 +1,7 @@
 #if !defined(materialTypes_h__)
 #define materialTypes_h__
 
-enum LightType {NONE = 0, POINT, VOLUME};
+enum LightType {NONE = 0, POINT, VOLUME, PLANAR, MESH};
 class MaterialType {
 public:
   double phongExp;

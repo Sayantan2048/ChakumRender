@@ -111,11 +111,25 @@ struct TriLight {
   TriLight(const Triangle &t_, const Vec rad): t(t_), radiance(rad){}
 };
 
+struct MeshLight {
+  std::vector<TriLight> mesh;
+  void add(const TriLight &t) {
+    mesh.push_back(t);
+  }
+  void initMeshLight();
+  double getSamples(uint32_t nSamples, Vec *store, uint32_t *ids);
+private:
+  double area; //Total surface area of mesh light.
+  const static uint32_t invCDFBins = 300;
+  uint32_t invCDF[invCDFBins]; // Roll a dice between 0 to invCDFBins to get a Triangle.
+};
+
 class LightSource {
   std::vector<SphereSource> sList;
   std::vector<PointSource> pList;
   std::vector<EnvSource> eS;
   std::vector<TriLight> tList;
+  std::vector<MeshLight> mList;
   static const double eps = 0.01;
 public:
   LightSource() {
@@ -126,7 +140,7 @@ public:
   void addSSource(const SphereSource &v) {
     sList.push_back(v);
     Sphere p = v.p;
-    p.r /= (1 + eps);
+    //p.r /= (1 + eps);
     p.m.radiance = v.radiance;
     vSphereList.push_back(p); // For a visible sphere light.
   }
@@ -138,6 +152,17 @@ public:
   }
   void addTSource(const TriLight &t) {
     tList.push_back(t);
+    Triangle tt = t.t;
+    tt.m.radiance = t.radiance;
+    vTriangleList.push_back(tt);
+  }
+  void addMSource(const MeshLight &m) {
+    mList.push_back(m);
+    for (uint32_t i = 0; i < m.mesh.size(); i++) {
+      Triangle tt = m.mesh[i].t;
+      tt.m.radiance = m.mesh[i].radiance;
+      vTriangleList.push_back(tt);
+    }
   }
   SphereSource* getSphereSourcePtr(uint32_t &nSources) {
     nSources = sList.size();
@@ -150,6 +175,7 @@ public:
   Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
 };
 
