@@ -24,9 +24,9 @@ struct EnvSource {
   uint32_t height;
   Vec radiance;
   uint32_t axis; // Axis around which image is wrapped
-  const static uint32_t nSamples = 1000;
-  const static uint32_t multiplier = 300;
-  Vec impSamples[nSamples * multiplier];
+  const static uint32_t nSamples = 2000;
+  const static uint32_t multiplier = 100;
+  Vec impSamples[nSamples * multiplier]; //bad idea!!
   double normalizationArea;
 
   EnvSource(Vec *image, uint32_t w, uint32_t h, Vec rad, uint32_t ax): envMap(image), width(w), height(h), radiance(rad), axis(ax) {
@@ -118,6 +118,7 @@ struct MeshLight {
   }
   void initMeshLight();
   double getSamples(uint32_t nSamples, Vec *store, uint32_t *ids);
+  bool intersect(const Ray &r, uint32_t &id, double &t, Vec &N);
 private:
   double area; //Total surface area of mesh light.
   const static uint32_t invCDFBins = 300;

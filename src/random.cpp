@@ -49,19 +49,12 @@
 #include <cstdlib>
 #include "random.h"
 
-#define N              (624)                 // length of state vector
-#define M              (397)                 // a period parameter
-#define K              (0x9908B0DFU)         // a magic constant
 #define hiBit(u)       ((u) & 0x80000000U)   // mask all but highest   bit of u
 #define loBit(u)       ((u) & 0x00000001U)   // mask all but lowest    bit of u
 #define loBits(u)      ((u) & 0x7FFFFFFFU)   // mask     the highest   bit of u
 #define mixBits(u, v)  (hiBit(u)|loBits(v))  // move hi bit of u to hi bit of v
 
-static mt_uint32   state[N+1];     // state vector + 1 extra to not violate ANSI C
-static mt_uint32   *next;          // next random value is computed from here
-static int      left = -1;      // can *next++ this many times before reloading
-
-void seedMT(mt_uint32 seed)
+void Random::seedMT(mt_uint32 seed)
  {
     //
     // We initialize state[0..(N-1)] via the generator
@@ -116,7 +109,7 @@ void seedMT(mt_uint32 seed)
         *s++ = (x*=69069U) & 0xFFFFFFFFU);
  }
 
-static mt_uint32 reloadMT(void)
+mt_uint32 Random::reloadMT(void)
  {
     register mt_uint32 *p0=state, *p2=state+2, *pM=state+M, s0, s1;
     register int    j;
@@ -139,7 +132,7 @@ static mt_uint32 reloadMT(void)
     return(s1 ^ (s1 >> 18));
  }
 
-mt_uint32 randomMT(void)
+mt_uint32 Random::randomMT(void)
  {
     mt_uint32 y;
 
@@ -153,7 +146,7 @@ mt_uint32 randomMT(void)
     return(y ^ (y >> 18));
  }
 
-double randomMTD(double a, double b)
+double Random::randomMTD(double a, double b)
  {
     mt_uint32 t = randomMT();
 

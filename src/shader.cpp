@@ -110,6 +110,8 @@ Vec shadeExplicit(const Ray &r) {
   int idS = 0, idT = 0;
   Vec nT, nS;
 
+  Random random(clock() & 0xFFFFFFFF);
+
   Vec col = Vec();
   Ray ri = r;
   std::vector<Vec> DI;
@@ -137,7 +139,7 @@ Vec shadeExplicit(const Ray &r) {
   BasePrimitive *ptr_new;
 
   for (int i = 0; i < 100; i++) {
-    double e = randomMTD(0, 1);
+    double e = random.randomMTD(0, 1);
 
     DI.push_back(shadeDI(ri, x, n, ptr));
 

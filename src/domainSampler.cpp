@@ -14,7 +14,7 @@ double* SphericalSampler::randoms;
 int SphericalSampler::__initSamples = SphericalSampler::initSamples();
 
 int SphericalSampler::initSamples() {
-    seedMT(0x191123FB);
+    Random random(0x191123FB);
     double x, y, z;
     /* Optimize...Use aligned memory??*/
     sampleVolume = new Vec[nSAMPLES * MULTIPLIER];
@@ -22,9 +22,9 @@ int SphericalSampler::initSamples() {
     randoms = new double[nSAMPLES * MULTIPLIER];
     cosineSurfaceSamples = new Vec[nSAMPLES * MULTIPLIER];
     for (int i = 0; i < nSAMPLES * MULTIPLIER;) {
-      x = randomMTD(-1.0, 1.0);
-      y = randomMTD(-1.0, 1.0);
-      z = randomMTD(-1.0, 1.0);
+      x = random.randomMTD(-1.0, 1.0);
+      y = random.randomMTD(-1.0, 1.0);
+      z = random.randomMTD(-1.0, 1.0);
 
       if ((x*x + y*y + z*z <= 1)) {
 	sampleVolume[i] = Vec(x, y, z);
@@ -33,12 +33,12 @@ int SphericalSampler::initSamples() {
       }
     }
     for (int i = 0; i < nSAMPLES * MULTIPLIER; i++)
-      randoms[i] = randomMTD(0, 1);
+      randoms[i] = random.randomMTD(0, 1);
 
     // Cosine weighted surface samples.
     for (int i = 0; i < nSAMPLES * MULTIPLIER; i++) {
-      double e1 = randomMTD(0, 1);
-      double e2 = randomMTD(0, 1);
+      double e1 = random.randomMTD(0, 1);
+      double e2 = random.randomMTD(0, 1);
       double theta = asin(sqrt(e1));
       double phi = 2 * PI * e2;
       double x = sin(theta) * cos(phi);
@@ -52,8 +52,8 @@ int SphericalSampler::initSamples() {
 }
 
 double SphericalSampler::getSphericalVolumeSamples(Vec x, int nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
-    int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
+    Random random(clock() & 0xFFFFFFFF);
+    int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
       store[j] = sampleVolume[i] + x;
@@ -62,8 +62,8 @@ double SphericalSampler::getSphericalVolumeSamples(Vec x, int nSamples, Vec *sto
 }
 
 double SphericalSampler::getSphericalSurfaceSamples(Vec x, int nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
-    int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
+    Random random(clock() & 0xFFFFFFFF);
+    int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
       store[j] = sampleSurface[i] + x;
@@ -72,8 +72,8 @@ double SphericalSampler::getSphericalSurfaceSamples(Vec x, int nSamples, Vec *st
 }
 
 double SphericalSampler::getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
-    int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
+    Random random(clock() & 0xFFFFFFFF);
+    int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
       store[j] = n.dot(sampleVolume[i]) >= 0? x+sampleVolume[i] : x-sampleSurface[i];
@@ -82,8 +82,8 @@ double SphericalSampler::getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *s
 }
 
 double SphericalSampler::getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
-    int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
+    Random random(clock() & 0xFFFFFFFF);
+    int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
       store[j] = n.dot(sampleSurface[i]) >= 0? x+sampleSurface[i] : x-sampleSurface[i];
@@ -92,14 +92,14 @@ double SphericalSampler::getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *
 }
 
 double SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
+    Random random(clock() & 0xFFFFFFFF);
 
     double sx, sy, sz;
     Vec s;
     for (int i = 0; i < nSAMPLES;) {
-      sx = randomMTD(-1.0, 1.0);
-      sy = randomMTD(-1.0, 1.0);
-      sz = randomMTD(-1.0, 1.0);
+      sx = random.randomMTD(-1.0, 1.0);
+      sy = random.randomMTD(-1.0, 1.0);
+      sz = random.randomMTD(-1.0, 1.0);
 
       if ((sx*sx + sy*sy + sz*sz <= 1)) {
 	s = Vec(sx, sy, sz).norm();
@@ -113,8 +113,8 @@ double SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, V
 
 // Importance sampling as per visible surface of light from a point x.
 double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
-    int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
+    Random random(clock() & 0xFFFFFFFF);
+    int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     Vec dir = (x - c).norm();
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
@@ -124,8 +124,8 @@ double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamp
 }
 
 void SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, uint32_t nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
-    uint32_t offset = randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
+    Random random(clock() & 0xFFFFFFFF);
+    uint32_t offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
 
     for (uint32_t i = 0, j = offset & 0xFFFFFFF0; i < nSamples; i++, j += 2) {
       double e1 = sqrt(randoms[j]);
@@ -139,8 +139,8 @@ void SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, c
 
 // Cosine weighted surface sampling.
 double SphericalSampler::getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
-    int offset = randomMTD(0, (MULTIPLIER - 1) * nSAMPLES); // We'll use one sample on every iteration.
+    Random random(clock() & 0xFFFFFFFF);
+    int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES); // We'll use one sample on every iteration.
 
     n.norm(); // Z - axis is transfomed to this axis.
 
@@ -176,8 +176,8 @@ double SphericalSampler::getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Ve
 
 // Get phong cosine lobe around w, centered at x0 with exponent e.
 double SphericalSampler::getPhongBRDFSamples(Vec n, Vec w, Vec x0, double e, int nSamples, Vec *store) {
-    seedMT(clock() & 0xFFFFFFFF);
-    int offset = randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
+    Random random(clock() & 0xFFFFFFFF);
+    int offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
     n.norm();
     w.norm(); // Z - axis is transfomed to this axis.
 
@@ -230,8 +230,8 @@ double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x0, double theta_max,
   // calculate area of cap using cap-hat theorem
   double A = 2.0 * PI * (1 - cos(theta_max));
 
-  seedMT(clock() & 0xFFFFFFFF);
-  int offset = randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
+  Random random(clock() & 0xFFFFFFFF);
+  int offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
 
   w.norm(); // Z - axis is transfomed to this axis.
 
@@ -278,7 +278,7 @@ double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x0, double theta_max,
 
 // This implementation is slightly faster but less numerically satble. You will see artifacts when size of light source gets smaller.
 /*double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store) {
-  seedMT(clock() & 0xFFFFFFFF);
+  Random random(clock() & 0xFFFFFFFF);
   double eps = 1e-14;
 
   w.norm();
@@ -286,7 +286,7 @@ double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x0, double theta_max,
   double alpha = w.z * w.z + eita; // Parabola opens upwards since alpha >= 0.
 
   for (int i = 0; i < nSamples;) {
-    double theta = randomMTD(theta_max/1000.0, theta_max);
+    double theta = random.randomMTD(theta_max/1000.0, theta_max);
     double delta1 = cos(theta);
 
     double beta = -2.0 * delta1 * w.z;
@@ -299,7 +299,7 @@ double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x0, double theta_max,
 
       double r = sqrt(1 - o*o);
 
-      double m = randomMTD(0.0, r);
+      double m = random.randomMTD(0.0, r);
       double n1 = sqrt (r * r - m * m);
       double n2 = -n1;
 

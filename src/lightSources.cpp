@@ -16,12 +16,13 @@
 #define SP_SAMPLING_TYPE	 2// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 //16 for phong BRDF sampling(works only if all objects are pure phong!!).
 #define ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
-#define ENV_SAMPLING_TYPE	1// 1 for Uniform hemispherical sampling, 2 Importance sampling.
+#define ENV_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Importance sampling.
 
 #define TRI_SAMPLES 		1000
 #define TRI_SAMPLING_TYPE	1
 
-#define MESH_SAMPLES 		40
+#define MESH_SAMPLES 		80
+#define MESH_SAMPLING_TYPE	2
 static double to_greyScale(Vec L);
 LightSource *lSource;
 /*
@@ -57,13 +58,14 @@ void configureLightSources() {
   /*uint32_t w, h;
   Vec *image;
   readImage(image, w, h);
-  lSource->addESource(EnvSource(image, w, h, Vec(1,1,1), 1));*/
-  //delete image.
+  lSource->addESource(EnvSource(image, w, h, Vec(1,1,1), 1));
+  delete []image;*/
   /*lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(30, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
+  /*
   MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(30, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
@@ -71,12 +73,12 @@ void configureLightSources() {
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 68, 60), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 0, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);
-/*
+  lSource->addMSource(mesh1);*/
+
   MeshLight mesh2;
   Vec A = Vec(30, 68, 60);
-  Vec B = Vec(70, 68, 100);
-  Vec C = Vec(30, 68, 100);
+  Vec B = Vec(70, 68, 60);
+  Vec C = Vec(50, 68, 100);
   Vec D = Vec(50, 40, 80);
   mesh2.add(TriLight(
     Triangle(A, B, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
@@ -87,7 +89,7 @@ void configureLightSources() {
   mesh2.add(TriLight(
     Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
   mesh2.initMeshLight();
-  lSource->addMSource(mesh2);*/
+  lSource->addMSource(mesh2);
 /*
   lSource->addTSource(TriLight(
     Triangle(A, B, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
@@ -101,6 +103,52 @@ void configureLightSources() {
 
 }
 
+#if MESH_SAMPLING_TYPE & 1
+Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+  if (mList.size() < 1) return Vec();
+  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
+  double cosine = 0;
+  double eps = 1e-08;
+  double brdf = 0;
+  Vec samples[MESH_SAMPLES] = {0};
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
+
+  // returns 1/pdf.
+  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, MESH_SAMPLES, samples);
+  Vec sumLight = Vec();
+  rr.o = x + n * eps;
+  Vec dummy;
+  for (uint32_t j = 0; j < mList.size(); j++) {
+    Vec sum;
+    for (int i = 0; i < MESH_SAMPLES; i++) {
+      double d;
+
+      rr.d = (samples[i] - x);
+
+      uint32_t id;
+      if (!mList[j].intersect(rr, id, d, dummy))
+	continue;
+
+      if (shadow(rr, d) < 0.5)
+	continue;
+
+      cosine = rr.d.dot(n);
+
+      if (cosine < 0) {
+	continue;
+      }
+
+      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+
+      sum = sum + mList[j].mesh[id].radiance * (cosine * brdf);
+    }
+    sumLight = sumLight + sum * ( pdf / MESH_SAMPLES);
+  }
+  return sumLight;
+}
+#else
 Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   if (mList.size() < 1) return Vec();
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
@@ -148,7 +196,7 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
   }
   return sumLight;
 }
-
+#endif
 
 Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   if (pList.size() < 1) return Vec();
@@ -329,10 +377,11 @@ Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x,
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
+  Random random(clock() & 0xFFFFFFFF);
 
   Vec sumLight = Vec();
   rr.o = x;
-  uint32_t offset = randomMTD(0, 299) * 1000;
+  uint32_t offset = random.randomMTD(0, (eS[0].multiplier -1) * ENV_SAMPLES);
   for (int i = 0; i < ENV_SAMPLES; i++) {
     rr.d = eS[0].impSamples[i + offset];
 
@@ -750,11 +799,11 @@ void EnvSource::initSamples() {
   for (uint32_t i = 0; i < marginalSamples; i++)
     invertedCDF(&pConditional[i * conditionalSamples], conditionalSamples, 2 * PI/conditionalSamples, &invConditionalCDF[i * pdfSamples], pdfSamples);
 
-  seedMT(clock() & 0xFFFFFFFF);
+  Random random(clock() & 0xFFFFFFFF);
 
   for (uint32_t j = 0; j < nSamples * multiplier; j++) {
-    double e1 = randomMTD(0, 1);
-    double e2 = randomMTD(0, 1);
+    double e1 = random.randomMTD(0, 1);
+    double e2 = random.randomMTD(0, 1);
 
     uint32_t thetaIdx = invMarginalCDF[(uint32_t)(e1 * pdfSamples)];
     double theta =  thetaIdx * (PI / marginalSamples);
@@ -798,11 +847,11 @@ void MeshLight::initMeshLight() {
 }
 
 double MeshLight::getSamples(uint32_t nSamples, Vec *store, uint32_t *ids) {
-    seedMT(clock() & 0xFFFFFFFF);
+    Random random(clock() & 0xFFFFFFFF);
     for (uint32_t i = 0; i < nSamples; i++) {
-      double e = randomMTD(0, 1);
-      double e1 = sqrt(randomMTD(0, 1));
-      double e2 = randomMTD(0, 1);
+      double e = random.randomMTD(0, 1);
+      double e1 = sqrt(random.randomMTD(0, 1));
+      double e2 = random.randomMTD(0, 1);
       uint32_t index = e * invCDFBins;
       index = index >= invCDFBins ? invCDFBins - 1: index;
 
@@ -815,4 +864,23 @@ double MeshLight::getSamples(uint32_t nSamples, Vec *store, uint32_t *ids) {
     }
 
     return area;
+}
+
+bool MeshLight::intersect(const Ray &r, uint32_t &id, double &t, Vec &N) {
+    double d;
+    Vec N_;
+    t = INF;
+    id = 0xFFFFFFFF;
+
+    // Find the closest sphere with which the ray intersects.
+    for (int i = mesh.size(); i--; ) {
+      if((d = mesh[i].t.intersect(r, N_)) && d < t) {
+	t = d; // set the distance of intersection.
+	N = N_;
+	id = i;
+      }
+    }
+
+    // return true if the intersection distance is finite.
+    return t < INF;
 }
