@@ -178,6 +178,8 @@ public:
   Vec getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightFromToonSourceMesh(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightFromToonSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
 };
 
 extern LightSource *lSource;

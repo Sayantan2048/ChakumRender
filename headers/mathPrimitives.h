@@ -29,6 +29,7 @@ struct Vec {
   Vec& norm();
   // Find the length of a vector.
   double length() const;
+  void show() const;
 };
 
 struct Ray {

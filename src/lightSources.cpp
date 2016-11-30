@@ -65,16 +65,16 @@ void configureLightSources() {
   lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
-  /*
+
   MeshLight mesh1;
   mesh1.add(TriLight(
-    Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(30, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
+    Triangle(Vec(30, 68, 60), Vec(30, 68, 100), Vec(70, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
   mesh1.add(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 68, 60), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 0, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);*/
-
+  lSource->addMSource(mesh1);
+/*
   MeshLight mesh2;
   Vec A = Vec(30, 68, 60);
   Vec B = Vec(70, 68, 60);
@@ -89,7 +89,7 @@ void configureLightSources() {
   mesh2.add(TriLight(
     Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
   mesh2.initMeshLight();
-  lSource->addMSource(mesh2);
+  lSource->addMSource(mesh2);*/
 /*
   lSource->addTSource(TriLight(
     Triangle(A, B, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));

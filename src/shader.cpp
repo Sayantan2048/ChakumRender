@@ -98,9 +98,10 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
-  Vec light = lSource->getLightFromPointSources(r, N, x, list) +
+  /*Vec light = lSource->getLightFromPointSources(r, N, x, list) +
 	lSource->getLightFromSphereSources(r, N, x, list) + lSource->getLightFromEnvSource(r, N, x, list)
-	+ lSource->getLightFromTriSources(r, N, x, list) + lSource->getLightFromMeshSources(r, N, x, list);
+	+ lSource->getLightFromTriSources(r, N, x, list) + lSource->getLightFromMeshSources(r, N, x, list);*/
+  Vec light = lSource->getLightFromToonSourceMesh(r, N, x, list);
   return list->c.mult(light); // Compute color of intersection.
 }
 

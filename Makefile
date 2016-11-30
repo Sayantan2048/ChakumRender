@@ -11,9 +11,9 @@ OBJ = $(ROOT)/src
 #make will look for files in these path apart from current location of makefile
 VPATH = $(SRC) $(INCLUDES) $(OBJ) $(ROOT)/externLib/sharedLib $(ROOT)/externLib/objectLoader
 
-main: domainSampler.o mathPrimitives.o random.o main.o materialTypes.o geometryPrimitives.o objects.o shader.o lightSources.o transformations.o dummyAccel.o bvhAccel.o mis.o ppm.o libobjLoader.so.1.0.1
+main: domainSampler.o mathPrimitives.o random.o main.o materialTypes.o geometryPrimitives.o objects.o shader.o lightSources.o toon.o transformations.o dummyAccel.o bvhAccel.o mis.o ppm.o libobjLoader.so.1.0.1
 	$(CC) $(CFLAGS) $(OBJ)/domainSampler.o $(OBJ)/mathPrimitives.o $(OBJ)/random.o $(OBJ)/materialTypes.o $(OBJ)/geometryPrimitives.o $(OBJ)/objects.o $(OBJ)/shader.o $(OBJ)/lightSources.o \
-	$(OBJ)/transformations.o $(OBJ)/dummyAccel.o $(OBJ)/bvhAccel.o $(OBJ)/mis.o $(OBJ)/ppm.o $(OBJ)/main.o -L$(ROOT)/externLib/sharedLib/ -lobjLoader
+	$(OBJ)/transformations.o $(OBJ)/dummyAccel.o $(OBJ)/bvhAccel.o $(OBJ)/mis.o $(OBJ)/toon.o $(OBJ)/ppm.o $(OBJ)/main.o -L$(ROOT)/externLib/sharedLib/ -lobjLoader
 
 main.o: main.cpp
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/main.cpp -o $(OBJ)/main.o
@@ -41,6 +41,9 @@ shader.o: shader.h shader.cpp
 
 lightSources.o: lightSources.h lightSources.cpp
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/lightSources.cpp -o $(OBJ)/lightSources.o
+
+toon.o: lightSources.h toon.cpp
+	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/toon.cpp -o $(OBJ)/toon.o
 
 transformations.o: transformations.h transformations.cpp
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/transformations.cpp -o $(OBJ)/transformations.o

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 #include "mathPrimitives.h"
 
 //Constructor with default values
@@ -20,3 +21,4 @@ Vec Vec::mult(const Vec &b) const { return Vec(x * b.x, y * b.y, z * b.z); }
 //Calulate norm, return reference? probably more efficient than calling copy constructor?
 Vec& Vec::norm(){ return *this = *this * (1.0 / sqrt(x * x + y * y + z * z)); }
 double Vec::length() const { return sqrt(x * x + y * y + z * z); }
+void Vec::show() const {std::cout<<"("<<x<<","<<y<<","<<z<<")";}
