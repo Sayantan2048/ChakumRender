@@ -61,6 +61,7 @@ ppm.o: ppm.cpp ppm.h
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/ppm.cpp -o $(OBJ)/ppm.o
 
 libobjLoader.so.1.0.1: objLoader.o list.o objParser.o stringExtra.o
+	-mkdir $(ROOT)/externLib/sharedLib
 	$(CC) $(CFLAGS) -shared -Wl,-soname,libobjLoader.so.1 -o $(ROOT)/externLib/sharedLib/libobjLoader.so.1.0.1  $(ROOT)/externLib/objectLoader/objLoader.o \
 	$(ROOT)/externLib/objectLoader/list.o $(ROOT)/externLib/objectLoader/objParser.o $(ROOT)/externLib/objectLoader/stringExtra.o
 	ln -s $(ROOT)/externLib/sharedLib/libobjLoader.so.1.0.1 $(ROOT)/libobjLoader.so.1
@@ -83,9 +84,12 @@ stringExtra.o: stringExtra.cpp stringExtra.h
 
 clean:
 	cd $(OBJ) && rm *.o
+	cd $(ROOT) && rm *.out
 
 cleanall:
-	cd $(OBJ) && rm *.o
-	cd $(ROOT)/externLib/objectLoader && rm *.o
-	cd $(ROOT)/externLib/sharedLib/ && rm *.*
-	cd $(ROOT) && rm *.so.* && rm *.so
+	-cd $(OBJ) && rm *.o
+	-cd $(ROOT)/externLib/objectLoader && rm *.o
+	-cd $(ROOT)/externLib/sharedLib/ && rm *.*
+	-cd $(ROOT) && rm *.so.*
+	-cd $(ROOT) && rm *.so
+	cd $(ROOT) && rm *.out
