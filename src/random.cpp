@@ -101,7 +101,7 @@ void Random::seedMT(mt_uint32 seed)
     // even be extra-special desirable if the Mersenne Twister theory says
     // so-- that's why the only change I made is to restrict to odd seeds.
     //
-
+    seed += rand();
     register mt_uint32 x = (seed | 1U) & 0xFFFFFFFFU, *s = state;
     register int    j;
 

@@ -42,12 +42,12 @@ void loadObjects() {
   vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   */
-  //vSphereList.push_back(Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25 * 0, .25 * 0), 1.0, MaterialType(3.2, .6, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25 * 0, .25 * 0, .75), 1.0, MaterialType(3.2, .6, NONE, Vec(0., 0., 0.))));
-  //vSphereList.push_back(Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 0.6, NONE, Vec(0., 0., 0.))));
-  vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(3.2, 0.0, NONE, Vec(0., 0., 0.))));
-  vSphereList.push_back(Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(0*.75, .75, .75), 1.0, MaterialType(3.2, 0.0, NONE, Vec(0., 0., 0.))));
-  vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 0.0, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25 * 0, .25 * 0), 1.0, MaterialType(3.2, .2, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25 * 0, .25 * 0, .75), 1.0, MaterialType(3.2, .2, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 0.2, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(3.2, 0.2, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(0*.75, .75, .75), 1.0, MaterialType(2, 0.2, NONE, Vec(0., 0., 0.))));
+  vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1.0, NONE, Vec(0., 0., 0.))));
   vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 0.0, NONE, Vec(0., 0., 0.))));
   //Dummy
  // vSphereList.push_back(Sphere(1,  Vec(27, 1e5, 47), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1, NONE, Vec(0., 0., 0.))));

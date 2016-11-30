@@ -98,10 +98,10 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
-  /*Vec light = lSource->getLightFromPointSources(r, N, x, list) +
+  Vec light = lSource->getLightFromPointSources(r, N, x, list) +
 	lSource->getLightFromSphereSources(r, N, x, list) + lSource->getLightFromEnvSource(r, N, x, list)
-	+ lSource->getLightFromTriSources(r, N, x, list) + lSource->getLightFromMeshSources(r, N, x, list);*/
-  Vec light = lSource->getLightFromToonSourceMesh(r, N, x, list);
+	+ lSource->getLightFromTriSources(r, N, x, list) + lSource->getLightFromMeshSources(r, N, x, list);
+  //Vec light = lSource->getLightFromToonSourceMesh(r, N, x, list);
   return list->c.mult(light); // Compute color of intersection.
 }
 
@@ -206,6 +206,8 @@ Vec shadeImplicit(const Ray &r) {
   int idS = 0, idT = 0;
   Vec nT, nS;
 
+  Random random(clock() & 0xFFFFFFFF);
+
   Vec product = Vec(1.0, 1.0, 1.0);
   Vec col = Vec();
   Ray ri = r;
@@ -240,11 +242,23 @@ Vec shadeImplicit(const Ray &r) {
 	Ray secondaryRay(0,0);
 	secondaryRay.o = x + n * 1e-6;
 	Vec sample[1];
-	double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, 1, sample);
-	secondaryRay.d = (sample[0] - x).norm();
+	double pdfInv = 1;
+	double e = random.randomMTD(0, 1);
+
+	// avoid devide by zero with addition of extra term 0.000001
+	if (e > ptr->m.specularCoef) {
+	  pdfInv = SphericalSampler::getHemiSurfaceSamples(n, x, 1, sample);
+	  secondaryRay.d = (sample[0] - x).norm();
+	}
+	else {
+	  SphericalSampler::getPhongBRDFSamples(n, wo_ref, x, ptr->m.phongExp, 1, sample);
+	  secondaryRay.d = (sample[0] - x).norm();
+	  pdfInv =  (2 * PI) / ((ptr->m.phongExp + 1.0) * (pow(secondaryRay.d.dot(wo_ref), ptr->m.phongExp) + 0.000001));
+	}
+
 	double cosine = secondaryRay.d.dot(n);
 	double brdf = ptr->brdf(n, wo_ref, secondaryRay.d, x);
-	product = product * (pdf * cosine * brdf);
+	product = product * (pdfInv * cosine * brdf);
 	product = ptr->c.mult(product);
 	ri = secondaryRay;
       }
@@ -277,11 +291,11 @@ Vec shadeDirectOnly(const Ray &r) {
 
 // R.d must be normalized before passing to shade.
 Vec shade(const Ray &r, int &depth) {
-#if 1
+#if 0
   return shadeDirectOnly(r);
 #endif
 
-#if 0
+#if 1
   return shadeImplicit(r);
 #endif
 
