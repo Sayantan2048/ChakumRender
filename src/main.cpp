@@ -16,7 +16,7 @@
 #include <cmath>
 #include <ctime>
 
-#define ANTIALIASING 500
+#define ANTIALIASING 1
 #define MOTIONBLUR   1
 
 double x_alias[] = {0.34, 0.86, 0.20, 0.86, 0.66, 0.34, 0.20, 0.66};

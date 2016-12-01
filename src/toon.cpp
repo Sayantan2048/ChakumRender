@@ -3,7 +3,7 @@
 #include "shader.h"
 #include <cmath>
 
-#define MESH_SAMPLES 80
+#define MESH_SAMPLES 160
 static double integrateEdge(Vec v1, Vec v2, Vec n) {
     double cosTheta = v1.dot(v2);
     double theta = acos(cosTheta);
@@ -114,8 +114,39 @@ static bool clipTriangle(Vec A, Vec B,  Vec C, Vec n, Vec P, double nA, double n
   return (intersectAB + intersectBC + intersectCA) > 1;
 }
 
-Vec LightSource::getLightFromToonSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
-  if (mList.size() < 1) return Vec();
+// We set confidence to zero when the point x is in penubra region of a shadow. We compute shading at this point due to all light sources,
+// irrespective of visibility. The excess light is taken care of in the control variate MC estimator.
+Vec LightSource::getLightFromToonSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, uint32_t &confidence) {
+   if (mList.size() < 1) return Vec();
+    confidence = 1;
+
+   double isTotalShadow = 0; // zero means total shadow.
+   for (uint32_t j = 0; j < mList.size(); j++) {
+    for (uint32_t i = 0; i < mList[j].mesh.size(); i++) {
+      Vec e1 = mList[j].mesh[i].t.A - x;
+      Vec e2 = mList[j].mesh[i].t.B - x;
+      Vec e3 = mList[j].mesh[i].t.C - x;
+
+      double d1 = e1.length();
+      double d2 = e2.length();
+      double d3 = e3.length();
+
+      e1.norm();
+      e2.norm();
+      e3.norm();
+
+      Ray r1(x, e1);
+      Ray r2(x, e2);
+      Ray r3(x, e3);
+
+      double s = shadow(r1, d1) + shadow(r2, d2) + shadow(r3, d3);
+      if (s > 0.01 && s < 2.99)
+	confidence = 0;
+      isTotalShadow += s;
+    }
+  }
+
+  if (isTotalShadow < 0.01) return Vec();
 
    Vec sumLight = Vec();
    for (uint32_t j = 0; j < mList.size(); j++) {
@@ -155,7 +186,9 @@ Vec LightSource::getLightFromToonSource(const Ray &r, const Vec &n, const Vec &x
 	sum += integrateEdge(e3, e4, n);
 	sum += integrateEdge(e4, e1, n);
 
-	//sum = 0;
+	// Do not set confidence to 1 in here as there can be two visibility events 1. Partially visibile light source. 2. An object casting a penubra at the same location due to same or another light source.
+	// Had it only been a scene case 1, confidence could have been set to 1.
+	//confidence = 1;
       }
       sum = sum > 0 ? sum : sum * -1;
 
@@ -174,13 +207,16 @@ Vec LightSource::getLightFromToonSourceMesh(const Ray &r, const Vec &n, const Ve
   double brdf = 0;
   Vec samples[MESH_SAMPLES] = {0};
   uint32_t ids[MESH_SAMPLES] = {0};
+  uint32_t cvConfidence = 1;
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
-  Vec G = getLightFromToonSource(r, n, x, primitive);
+  Vec G = getLightFromToonSource(r, n, x, primitive, cvConfidence);
+
+  if (cvConfidence > 0) return G;
 
   for (uint32_t j = 0; j < mList.size(); j++) {
     Vec sum;

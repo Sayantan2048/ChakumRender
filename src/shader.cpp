@@ -98,10 +98,10 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
-  Vec light = lSource->getLightFromPointSources(r, N, x, list) +
+  /*Vec light = lSource->getLightFromPointSources(r, N, x, list) +
 	lSource->getLightFromSphereSources(r, N, x, list) + lSource->getLightFromEnvSource(r, N, x, list)
-	+ lSource->getLightFromTriSources(r, N, x, list) + lSource->getLightFromMeshSources(r, N, x, list);
-  //Vec light = lSource->getLightFromToonSourceMesh(r, N, x, list);
+	+ lSource->getLightFromTriSources(r, N, x, list) + lSource->getLightFromMeshSources(r, N, x, list);*/
+  Vec light = lSource->getLightFromToonSourceMesh(r, N, x, list);
   return list->c.mult(light); // Compute color of intersection.
 }
 
@@ -200,6 +200,66 @@ Vec shadeExplicit(const Ray &r) {
   }
   return col;
 }
+#define EXPLICIT_SAMPLES 50
+Vec shadeExplicitFirstBounce(const Ray &r) {
+  double tS = INF, tT = INF;
+  int idS = 0, idT = 0;
+  Vec nT, nS;
+  const uint32_t maxSamples = EXPLICIT_SAMPLES * 3;
+  Vec samples[maxSamples];
+
+  // Returns normalized N.
+  bool iTriangle = intersectTriangle(r, tT, nT, idT, nTriangles, triangleList);
+  bool iSphere = intersectSphere(r, tS, nS, idS, nSpheres, sphereList);
+
+  if (!(iSphere || iTriangle)) return Vec();
+
+  Vec x = tS < tT ? r.o + r.d * tS : r.o + r.d * tT;
+  Vec n = tS < tT ? nS: nT;
+  BasePrimitive *ptr = tS < tT ? (BasePrimitive *)&sphereList[idS]: (BasePrimitive *)&triangleList[idT];
+
+  Vec hitLightSource = ptr->m.getRadiance(n, r.d * -1.0);
+
+  Vec directIllumination = (iSphere || iTriangle) ? ((ptr->m.l != NONE) ? hitLightSource : shadeDI(r, x, n, ptr)) : 0;
+
+  if (ptr->m.l != NONE)
+	return hitLightSource;
+
+  double pdfInv = SphericalSampler::getHemiSurfaceSamples(n, x, maxSamples, samples);
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
+
+  Ray secondaryRay(0,0);
+  secondaryRay.o = x + n * 1e-6;
+
+  uint32_t nIndirectRays = 0;
+  Vec indirectIllumination;
+  for (uint32_t i = 0; i < maxSamples && nIndirectRays < EXPLICIT_SAMPLES; i++) {
+    secondaryRay.d = (samples[i] - x).norm();
+
+    iTriangle = intersectTriangle(secondaryRay, tT, nT, idT, nTriangles, triangleList);
+    iSphere = intersectSphere(secondaryRay, tS, nS, idS, nSpheres, sphereList);
+
+    if (!(iSphere || iTriangle))
+	continue; // Ray escapes scene
+
+    BasePrimitive *ptr_new = tS < tT ? (BasePrimitive *)&sphereList[idS]: (BasePrimitive *)&triangleList[idT];
+
+    if (ptr_new->m.l != NONE)
+	continue; // Hits a light source
+
+    double cosine = secondaryRay.d.dot(n);
+    double brdf = ptr->brdf(n, wo_ref, secondaryRay.d, x);
+    double product = (pdfInv * cosine * brdf);
+
+    indirectIllumination = indirectIllumination + shadeExplicit(secondaryRay).mult((ptr->c * product));
+
+    nIndirectRays++;
+  }
+
+  return directIllumination + indirectIllumination / nIndirectRays;
+}
 
 Vec shadeImplicit(const Ray &r) {
   double tS = INF, tT = INF;
@@ -244,19 +304,20 @@ Vec shadeImplicit(const Ray &r) {
 	Vec sample[1];
 	double pdfInv = 1;
 	double e = random.randomMTD(0, 1);
-
+	double cosine = 1;
 	// avoid devide by zero with addition of extra term 0.000001
-	if (e > ptr->m.specularCoef) {
-	  pdfInv = SphericalSampler::getHemiSurfaceSamples(n, x, 1, sample);
+	if (e > ptr->m.specularCoef || 1) {
+	  pdfInv = SphericalSampler::getCosineSurfaceSamples(n, x, 1, sample);
 	  secondaryRay.d = (sample[0] - x).norm();
 	}
 	else {
 	  SphericalSampler::getPhongBRDFSamples(n, wo_ref, x, ptr->m.phongExp, 1, sample);
 	  secondaryRay.d = (sample[0] - x).norm();
 	  pdfInv =  (2 * PI) / ((ptr->m.phongExp + 1.0) * (pow(secondaryRay.d.dot(wo_ref), ptr->m.phongExp) + 0.000001));
+	  cosine = secondaryRay.d.dot(n);
 	}
 
-	double cosine = secondaryRay.d.dot(n);
+
 	double brdf = ptr->brdf(n, wo_ref, secondaryRay.d, x);
 	product = product * (pdfInv * cosine * brdf);
 	product = ptr->c.mult(product);
@@ -295,12 +356,16 @@ Vec shade(const Ray &r, int &depth) {
   return shadeDirectOnly(r);
 #endif
 
-#if 1
+#if 0
   return shadeImplicit(r);
 #endif
 
 #if 0
   return shadeExplicit(r);
+#endif
+
+#if 1
+  return shadeExplicitFirstBounce(r);
 #endif
 }
 
