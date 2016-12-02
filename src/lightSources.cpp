@@ -12,16 +12,16 @@
 #include "domainSampler.h"
 #include "ppm.h"
 
-#define SP_SAMPLES 		(1000) // Should be less than the No. of samples in domainSampler.h
-#define SP_SAMPLING_TYPE	 1// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define MAX_SP_SAMPLES 		(1000) // Should be less than the No. of samples in domainSampler.h
+#define SP_SAMPLING_TYPE	32// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 //16 for phong BRDF sampling(works only if all objects are pure phong!!).
-#define ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
+#define MAX_ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
 #define ENV_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Importance sampling.
 
-#define TRI_SAMPLES 		1000
-#define TRI_SAMPLING_TYPE	1
+#define MAX_TRI_SAMPLES 	1000 // Should be less than the No. of samples in domainSampler.h
+#define TRI_SAMPLING_TYPE	2
 
-#define MESH_SAMPLES 		160
+#define MAX_MESH_SAMPLES	1000 // Should be less than the No. of samples in domainSampler.h
 #define MESH_SAMPLING_TYPE	2
 static double to_greyScale(Vec L);
 LightSource *lSource;
@@ -66,7 +66,7 @@ void configureLightSources() {
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
 
-  MeshLight mesh1;
+ MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(30, 68, 60), Vec(30, 68, 100), Vec(70, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
   mesh1.add(TriLight(
@@ -104,25 +104,26 @@ void configureLightSources() {
 }
 
 #if MESH_SAMPLING_TYPE & 1
-Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (mList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_MESH_SAMPLES ? MAX_MESH_SAMPLES : nSamples;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[MESH_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, MESH_SAMPLES, samples);
+  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, sampleCount, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
   Vec dummy;
   for (uint32_t j = 0; j < mList.size(); j++) {
     Vec sum;
-    for (int i = 0; i < MESH_SAMPLES; i++) {
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x);
@@ -144,19 +145,21 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
 
       sum = sum + mList[j].mesh[id].radiance * (cosine * brdf);
     }
-    sumLight = sumLight + sum * ( pdf / MESH_SAMPLES);
+    sumLight = sumLight + sum * ( pdf / sampleCount);
   }
   return sumLight;
 }
 #else
-Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (mList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_MESH_SAMPLES ? MAX_MESH_SAMPLES : nSamples;
+
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[MESH_SAMPLES] = {0};
-  uint32_t ids[MESH_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
+  uint32_t ids[sampleCount] = {0};
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
@@ -167,8 +170,8 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
   for (uint32_t j = 0; j < mList.size(); j++) {
     Vec sum;
     // returns 1/pdf.
-    double pdf = mList[j].getSamples(MESH_SAMPLES, samples, ids);
-    for (int i = 0; i < MESH_SAMPLES; i++) {
+    double pdf = mList[j].getSamples(sampleCount, samples, ids);
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x).norm();
@@ -192,7 +195,7 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
 
       sum = sum +  mList[j].mesh[ids[i]].radiance * (cosine * cosine1 * brdf / (d * d));
     }
-    sumLight = sumLight + sum * (pdf/MESH_SAMPLES);
+    sumLight = sumLight + sum * (pdf/sampleCount);
   }
   return sumLight;
 }
@@ -235,25 +238,26 @@ Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec 
   return sumLight;
 }
 #if TRI_SAMPLING_TYPE & 1
-Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (tList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_TRI_SAMPLES ? MAX_TRI_SAMPLES : nSamples;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[TRI_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, TRI_SAMPLES, samples);
+  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, sampleCount, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
   Vec dummy;
   for (uint32_t j = 0; j < tList.size(); j++) {
     double sum = 0;
-    for (int i = 0; i < TRI_SAMPLES; i++) {
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x);
@@ -276,18 +280,19 @@ Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x
 
       sum += (cosine * brdf);
     }
-    sumLight = sumLight + tList[j].radiance * ( pdf * sum/TRI_SAMPLES);
+    sumLight = sumLight + tList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
 }
 #else
-Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (tList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_TRI_SAMPLES ? MAX_TRI_SAMPLES : nSamples;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[TRI_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
@@ -297,10 +302,10 @@ Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x
 
   for (uint32_t j = 0; j < tList.size(); j++) {
     double sum = 0;
-    SphericalSampler::getTriLightSurfaceSamples(tList[j].t.A, tList[j].t.B, tList[j].t.C, TRI_SAMPLES, samples);
+    SphericalSampler::getTriLightSurfaceSamples(tList[j].t.A, tList[j].t.B, tList[j].t.C, sampleCount, samples);
     // returns 1/pdf.
     double pdf = tList[j].t.area;
-    for (int i = 0; i < TRI_SAMPLES; i++) {
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x).norm();
@@ -324,30 +329,31 @@ Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x
 
       sum += (cosine * cosine1 * brdf / (d * d));
     }
-    sumLight = sumLight + tList[j].radiance * ( pdf * sum/TRI_SAMPLES);
+    sumLight = sumLight + tList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
 }
 #endif
 
 #if ENV_SAMPLING_TYPE & 1
-Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (eS.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_ENV_SAMPLES ? MAX_ENV_SAMPLES : nSamples;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[ENV_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, ENV_SAMPLES, samples);
+  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, sampleCount, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
-  for (int i = 0; i < ENV_SAMPLES; i++) {
+  for (uint32_t i = 0; i < sampleCount; i++) {
     rr.d = (samples[i] - x);
 
     if (shadow(rr, INF) < 0.5)
@@ -363,13 +369,14 @@ Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x,
 
     sumLight = sumLight + eS[0].getRadiance(rr.d) * cosine * brdf;
   }
-  sumLight = sumLight * (pdf/ENV_SAMPLES);
+  sumLight = sumLight * (pdf/sampleCount);
 
   return sumLight;
 }
 #else
-Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (eS.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_ENV_SAMPLES ? MAX_ENV_SAMPLES : nSamples;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
@@ -381,8 +388,8 @@ Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x,
 
   Vec sumLight = Vec();
   rr.o = x;
-  uint32_t offset = random.randomMTD(0, (eS[0].multiplier -1) * ENV_SAMPLES);
-  for (int i = 0; i < ENV_SAMPLES; i++) {
+  uint32_t offset = random.randomMTD(0, (eS[0].multiplier -1) * sampleCount);
+  for (uint32_t i = 0; i < sampleCount; i++) {
     rr.d = eS[0].impSamples[i + offset];
 
     if (shadow(rr, INF) < 0.5)
@@ -402,34 +409,34 @@ Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x,
       sumLight = sumLight + (L * cosine * brdf)/pdf;
   }
   //std::cout<<sumLight.x<<" "<<sumLight.y<<" "<<sumLight.z<<" \n";
-  sumLight = sumLight * (eS[0].normalizationArea/(ENV_SAMPLES));
+  sumLight = sumLight * (eS[0].normalizationArea/(sampleCount));
 
   return sumLight;
 }
 #endif
 
 #if SP_SAMPLING_TYPE & 1
-
-Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (sList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[SP_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, SP_SAMPLES, samples);
+  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, sampleCount, samples);
   //SphericalSampler::getDistribution(n, x, SP_SAMPLES, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
-    for (int i = 0; i < SP_SAMPLES; i++) {
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x);
@@ -452,19 +459,20 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
       sum += (cosine * brdf);
     }
-    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SP_SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
 }
 
 #elif SP_SAMPLING_TYPE & 2
-Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (sList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[SP_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
@@ -477,9 +485,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
     Vec w = sList[j].p.p - x;
     double sinThetaMax = sList[j].p.r/w.length();
     // returns 1/pdf.
-    double pdf = SphericalSampler::getSolidSurfaceSamples(w, x, asin(sinThetaMax), SP_SAMPLES - 1, samples);
-    samples[SP_SAMPLES - 1] = x + w.norm();
-    for (int i = 0; i < SP_SAMPLES; i++) {
+    double pdf = SphericalSampler::getSolidSurfaceSamples(w, x, asin(sinThetaMax), sampleCount, samples);
+    //samples[SP_SAMPLES - 1] = x + w.norm();
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x);
@@ -502,19 +510,20 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
       sum += (cosine * brdf);
     }
-    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SP_SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
 }
 
 #elif SP_SAMPLING_TYPE & 4
-Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (sList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[SP_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
@@ -525,9 +534,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     // returns 1/pdf.
-    double pdf = SphericalSampler::getLightSurfaceSample(sList[j].p.p, sList[j].p.r, x, SP_SAMPLES, samples);
+    double pdf = SphericalSampler::getLightSurfaceSample(sList[j].p.p, sList[j].p.r, x, sampleCount, samples);
 
-    for (int i = 0; i < SP_SAMPLES; i++) {
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x).norm();
@@ -551,22 +560,22 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
       sum += (cosine * cosine1 * brdf / (d * d));
     }
-    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SP_SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
 }
 #elif SP_SAMPLING_TYPE & 8
-
-Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (sList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
   double cosine = 0;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[SP_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getCosineSurfaceSamples(n, x, SP_SAMPLES, samples);
+  double pdf = SphericalSampler::getCosineSurfaceSamples(n, x, sampleCount, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
@@ -575,7 +584,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
-    for (int i = 0; i < SP_SAMPLES; i++) {
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x);
@@ -599,29 +608,30 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
       sum += (brdf);
     }
-    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SP_SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
 }
 
 #elif SP_SAMPLING_TYPE & 16
-Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (sList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
   double cosine = 0;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double eps = 1e-08;
-  Vec samples[SP_SAMPLES] = {0};
+  Vec samples[sampleCount] = {0};
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   // returns 1/pdf.
-  double pdf = SphericalSampler::getPhongBRDFSamples(n, wo_ref, x, primitive->m.phongExp, SP_SAMPLES, samples);
+  double pdf = SphericalSampler::getPhongBRDFSamples(n, wo_ref, x, primitive->m.phongExp, sampleCount, samples);
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
-    for (int i = 0; i < SP_SAMPLES; i++) {
+    for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
       rr.d = (samples[i] - x);
@@ -643,12 +653,12 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
       sum += cosine;
     }
-    sumLight = sumLight + sList[j].radiance * ( pdf * sum/SP_SAMPLES);
+    sumLight = sumLight + sList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
 }
 #else
-Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t dummy) {
   if (sList.size() < 1) return Vec();
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
@@ -667,7 +677,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
-    for (int i = 0; i < nSamples; i++) {
+    for (uint32_t i = 0; i < nSamples; i++) {
       double d;
 
       rr.d = (samples[i] - x).norm();

@@ -98,10 +98,10 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
-  /*Vec light = lSource->getLightFromPointSources(r, N, x, list) +
-	lSource->getLightFromSphereSources(r, N, x, list) + lSource->getLightFromEnvSource(r, N, x, list)
-	+ lSource->getLightFromTriSources(r, N, x, list) + lSource->getLightFromMeshSources(r, N, x, list);*/
-  Vec light = lSource->getLightFromToonSourceMesh(r, N, x, list);
+  Vec light = lSource->getLightFromPointSources(r, N, x, list) +
+	lSource->getLightFromSphereSources(r, N, x, list, 20) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
+	+ lSource->getLightFromTriSources(r, N, x, list, 100) + lSource->getLightFromMeshSources(r, N, x, list, 1);
+  //Vec light = lSource->getLightFromMeshSource_CVNoShadow(r, N, x, list, 1);
   return list->c.mult(light); // Compute color of intersection.
 }
 
@@ -201,6 +201,13 @@ Vec shadeExplicit(const Ray &r) {
   return col;
 }
 #define EXPLICIT_SAMPLES 50
+inline Vec shadeDI2(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
+  /*Vec light = lSource->getLightFromPointSources(r, N, x, list) +
+	lSource->getLightFromSphereSources(r, N, x, list, 20) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
+	+ lSource->getLightFromTriSources(r, N, x, list, 100) + lSource->getLightFromMeshSources(r, N, x, list, 1);*/
+  Vec light = lSource->getLightFromMeshSource_CVShadow(r, N, x, list, 80);
+  return list->c.mult(light); // Compute color of intersection.
+}
 Vec shadeExplicitFirstBounce(const Ray &r) {
   double tS = INF, tT = INF;
   int idS = 0, idT = 0;
@@ -220,7 +227,7 @@ Vec shadeExplicitFirstBounce(const Ray &r) {
 
   Vec hitLightSource = ptr->m.getRadiance(n, r.d * -1.0);
 
-  Vec directIllumination = (iSphere || iTriangle) ? ((ptr->m.l != NONE) ? hitLightSource : shadeDI(r, x, n, ptr)) : 0;
+  Vec directIllumination = (iSphere || iTriangle) ? ((ptr->m.l != NONE) ? hitLightSource : shadeDI2(r, x, n, ptr)) : 0;
 
   if (ptr->m.l != NONE)
 	return hitLightSource;
@@ -360,11 +367,11 @@ Vec shade(const Ray &r, int &depth) {
   return shadeImplicit(r);
 #endif
 
-#if 0
+#if 1
   return shadeExplicit(r);
 #endif
 
-#if 1
+#if 0
   return shadeExplicitFirstBounce(r);
 #endif
 }

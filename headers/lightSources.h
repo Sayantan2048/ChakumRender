@@ -132,6 +132,9 @@ class LightSource {
   std::vector<TriLight> tList;
   std::vector<MeshLight> mList;
   static const double eps = 0.01;
+
+  Vec getLightFromMeshSourceAdv(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, uint32_t &confidence);
+  Vec getLightFromMeshSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
 public:
   LightSource() {
     sList.reserve(5);
@@ -174,12 +177,12 @@ public:
     return ptr;
   }
   Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
-  Vec getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
-  Vec getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
-  Vec getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
-  Vec getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
-  Vec getLightFromToonSourceMesh(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
-  Vec getLightFromToonSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, uint32_t &cvConfidence);
+  Vec getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromMeshSource_CVShadow(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromMeshSource_CVNoShadow(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
 };
 
 extern LightSource *lSource;
