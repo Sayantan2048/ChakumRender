@@ -292,7 +292,7 @@ Vec LightSource::getLightFromMeshSource_CVNoShadow(const Ray &r, const Vec &n, c
 	  continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum = sum +  mList[j].mesh[ids[i]].radiance * ((visibility - 1.0) * cosine * cosine1 * brdf / (d * d));
     }
@@ -349,7 +349,7 @@ Vec LightSource::getLightFromMeshSource_CVShadow(const Ray &r, const Vec &n, con
 	  continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum = sum +  mList[j].mesh[ids[i]].radiance * ((visibility - 1.0) * cosine * cosine1 * brdf / (d * d));
     }

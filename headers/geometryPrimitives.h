@@ -31,7 +31,7 @@ public:
   // Axis Aligned bounding box.
   AABBox box;
   // brdf
-  double brdf(Vec n, Vec wo, Vec wi, Vec x);
+  double brdf(Vec n, Vec wo_ref, Vec wo, Vec wi, Vec x);
   BasePrimitive(Vec c_, double r_, MaterialType m_, AABBox b): c(c_), reflectance(r_), m(m_), box(b) {}
 };
 
@@ -45,7 +45,7 @@ public:
 
   Sphere(double r_ = 1.0, Vec p_ = Vec(0., 0., 0.),
 	 Vec c_ = Vec(0., 0., 0.), double ref_ = 0,
-	 MaterialType m_ = MaterialType(0., 0., NONE, Vec(0., 0., 0.))): BasePrimitive(c_, ref_, m_, AABBox(r_, p_)) {
+	 MaterialType m_ = MaterialType()): BasePrimitive(c_, ref_, m_, AABBox(r_, p_)) {
     r = r_;
     p = p_;
   }
@@ -66,7 +66,7 @@ public:
   // normal
   Vec n;
   double area;
-  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = MaterialType(0.0, 0.0, NONE, Vec(0., 0., 0.))):
+  Triangle(Vec A_ = dV, Vec B_ = dV, Vec C_ = dV, Vec c_ = dV, double r_ = 1, MaterialType m_ = MaterialType()):
     BasePrimitive(c_, r_, m_, AABBox::uNion(AABBox(A_, B_), C_)) {
 	  Vec c;
 	  A = A_;

@@ -13,7 +13,7 @@
 #include "ppm.h"
 
 #define MAX_SP_SAMPLES 		(1000) // Should be less than the No. of samples in domainSampler.h
-#define SP_SAMPLING_TYPE	32// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define SP_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 //16 for phong BRDF sampling(works only if all objects are pure phong!!).
 #define MAX_ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
 #define ENV_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Importance sampling.
@@ -47,33 +47,43 @@ void configureLightSources() {
   lSource = new LightSource();
   //lSource->addPSource(PointSource(Vec(50, 68.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)));
   //lSource->addPSource(PointSource(Vec(50, 40.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)));
-  //lSource->addSSource(SphereSource(Vec(10.0, 0.0, 0.0), Sphere(10, Vec(20, 40.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.5, VOLUME, Vec(0., 0., 0.)))));
-  //lSource->addSSource(SphereSource(Vec(5.0, 0.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(0.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
-  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(0.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 0.0, 0.0), Sphere(10, Vec(20, 40.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(5.0, 0.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 20, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(80, Vec(50, 100, -400), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //Veach Scene
-  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
-  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
-  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(5, Vec(-50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
-  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(1, Vec(-150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(1.0, 0.0, VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(5, Vec(-50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(1, Vec(-150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   /*uint32_t w, h;
   Vec *image;
   readImage(image, w, h);
   lSource->addESource(EnvSource(image, w, h, Vec(1,1,1), 1));
   delete []image;*/
   /*lSource->addTSource(TriLight(
-    Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(30, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+    Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(30, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   lSource->addTSource(TriLight(
-    Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+    Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
 
- MeshLight mesh1;
+  MeshLight mesh1;
   mesh1.add(TriLight(
-    Triangle(Vec(30, 68, 60), Vec(30, 68, 100), Vec(70, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
+    Triangle(Vec(130, 200, -800), Vec(-30, 200, -800), Vec(-30, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   mesh1.add(TriLight(
-    Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 68, 60), Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 0, 10)));
+    Triangle(Vec(130, 200, -800), Vec(-30, 40, -800), Vec(130, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 
   mesh1.initMeshLight();
   lSource->addMSource(mesh1);
+
+ /*MeshLight mesh1;
+  mesh1.add(TriLight(
+    Triangle(Vec(30, 10, 60), Vec(30, 10, 100), Vec(70, 10, 100), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
+  mesh1.add(TriLight(
+    Triangle(Vec(30, 10, 60), Vec(70, 10, 100), Vec(70, 10, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 0, 10)));
+
+  mesh1.initMeshLight();
+  lSource->addMSource(mesh1);*/
 /*
   MeshLight mesh2;
   Vec A = Vec(30, 68, 60);
@@ -81,24 +91,24 @@ void configureLightSources() {
   Vec C = Vec(50, 68, 100);
   Vec D = Vec(50, 40, 80);
   mesh2.add(TriLight(
-    Triangle(A, B, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
+    Triangle(A, B, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
   mesh2.add(TriLight(
-    Triangle(B, D, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(0, 10, 0)));
+    Triangle(B, D, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(0, 10, 0)));
   mesh2.add(TriLight(
-    Triangle(A, D, B, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+    Triangle(A, D, B, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   mesh2.add(TriLight(
-    Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
+    Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
   mesh2.initMeshLight();
   lSource->addMSource(mesh2);*/
 /*
   lSource->addTSource(TriLight(
-    Triangle(A, B, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
+    Triangle(A, B, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
   lSource->addTSource(TriLight(
-    Triangle(B, D, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(0, 10, 0)));
+    Triangle(B, D, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(0, 10, 0)));
   lSource->addTSource(TriLight(
-    Triangle(A, D, B, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+    Triangle(A, D, B, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   lSource->addTSource(TriLight(
-    Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(0.0, 0.0, PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
+    Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
 */
 
 }
@@ -141,7 +151,7 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
 	continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum = sum + mList[j].mesh[id].radiance * (cosine * brdf);
     }
@@ -191,7 +201,7 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
 	  continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum = sum +  mList[j].mesh[ids[i]].radiance * (cosine * cosine1 * brdf / (d * d));
     }
@@ -230,7 +240,7 @@ Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec 
 	continue;
     }
 
-    brdf = primitive->brdf(n, wo_ref, refd, x);
+    brdf = primitive->brdf(n, wo_ref, r.d * -1.0, refd, x);
 
     sumLight = sumLight + (pList[i].radiance(x) * (cosine * brdf));
   }
@@ -276,7 +286,7 @@ Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x
 	continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum += (cosine * brdf);
     }
@@ -325,7 +335,7 @@ Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x
 	  continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum += (cosine * cosine1 * brdf / (d * d));
     }
@@ -365,7 +375,7 @@ Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x,
 	continue;
     }
 
-    brdf = primitive->brdf(n, wo_ref, rr.d, x);
+    brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
     sumLight = sumLight + eS[0].getRadiance(rr.d) * cosine * brdf;
   }
@@ -401,7 +411,7 @@ Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x,
 	continue;
     }
 
-    brdf = primitive->brdf(n, wo_ref, rr.d, x);
+    brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
     Vec L = eS[0].getRadiance(rr.d);
     double pdf = to_greyScale(L);
 
@@ -455,7 +465,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum += (cosine * brdf);
     }
@@ -506,7 +516,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	  continue; // Color dark side of an object black.
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum += (cosine * brdf);
     }
@@ -556,7 +566,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	  continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum += (cosine * cosine1 * brdf / (d * d));
     }
@@ -604,7 +614,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	  continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum += (brdf);
     }
@@ -696,7 +706,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	continue;
       }
 
-      brdf = primitive->brdf(n, wo_ref, rr.d, x);
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
       sum += (cosine * brdf * weight[i]);
     }

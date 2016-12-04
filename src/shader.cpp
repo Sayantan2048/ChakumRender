@@ -100,7 +100,7 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
   Vec light = lSource->getLightFromPointSources(r, N, x, list) +
 	lSource->getLightFromSphereSources(r, N, x, list, 20) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
-	+ lSource->getLightFromTriSources(r, N, x, list, 100) + lSource->getLightFromMeshSources(r, N, x, list, 1);
+	+ lSource->getLightFromTriSources(r, N, x, list, 100) + lSource->getLightFromMeshSources(r, N, x, list, 80);
   //Vec light = lSource->getLightFromMeshSource_CVNoShadow(r, N, x, list, 1);
   return list->c.mult(light); // Compute color of intersection.
 }
@@ -184,7 +184,7 @@ Vec shadeExplicit(const Ray &r) {
 	break;
      }
      double cosine = secondaryRay.d.dot(n);
-     double brdf = ptr->brdf(n, wo_ref, secondaryRay.d, x);
+     double brdf = ptr->brdf(n, wo_ref, ri.d * -1.0, secondaryRay.d, x);
      double product = (pdf * cosine * brdf);
      TP.push_back(ptr->c*product);
 
@@ -257,7 +257,7 @@ Vec shadeExplicitFirstBounce(const Ray &r) {
 	continue; // Hits a light source
 
     double cosine = secondaryRay.d.dot(n);
-    double brdf = ptr->brdf(n, wo_ref, secondaryRay.d, x);
+    double brdf = ptr->brdf(n, wo_ref, r.d * -1.0, secondaryRay.d, x);
     double product = (pdfInv * cosine * brdf);
 
     indirectIllumination = indirectIllumination + shadeExplicit(secondaryRay).mult((ptr->c * product));
@@ -313,7 +313,7 @@ Vec shadeImplicit(const Ray &r) {
 	double e = random.randomMTD(0, 1);
 	double cosine = 1;
 	// avoid devide by zero with addition of extra term 0.000001
-	if (e > ptr->m.specularCoef || 1) {
+	if (e > ptr->m.specularCoef) {
 	  pdfInv = SphericalSampler::getCosineSurfaceSamples(n, x, 1, sample);
 	  secondaryRay.d = (sample[0] - x).norm();
 	}
@@ -324,8 +324,7 @@ Vec shadeImplicit(const Ray &r) {
 	  cosine = secondaryRay.d.dot(n);
 	}
 
-
-	double brdf = ptr->brdf(n, wo_ref, secondaryRay.d, x);
+	double brdf = ptr->brdf(n, wo_ref, ri.d * -1.0, secondaryRay.d, x);
 	product = product * (pdfInv * cosine * brdf);
 	product = ptr->c.mult(product);
 	ri = secondaryRay;
@@ -359,7 +358,7 @@ Vec shadeDirectOnly(const Ray &r) {
 
 // R.d must be normalized before passing to shade.
 Vec shade(const Ray &r, int &depth) {
-#if 0
+#if 1
   return shadeDirectOnly(r);
 #endif
 
@@ -367,7 +366,7 @@ Vec shade(const Ray &r, int &depth) {
   return shadeImplicit(r);
 #endif
 
-#if 1
+#if 0
   return shadeExplicit(r);
 #endif
 

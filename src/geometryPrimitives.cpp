@@ -4,8 +4,8 @@
 #include "materialTypes.h"
 #include <iostream>
 
-double BasePrimitive::brdf(Vec n, Vec wo, Vec wi, Vec x) {
-  return m.brdf(n, wo, wi) * reflectance;
+double BasePrimitive::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi, Vec x) {
+  return m.brdf(n, wo_ref, wo, wi) * reflectance;
 }
 
 // Always return positve t or Does not intersect!!
