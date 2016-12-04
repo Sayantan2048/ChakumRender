@@ -13,8 +13,26 @@ double MaterialType::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi) {
       Vec h = (wo + wi).norm();
 
       double F = fresnel(h.dot(wi));
-      double D = ggxDistribution(h, n);
+      double D = ggxDist(h, n);
       double G = ggxG1(wo, h, n) * ggxG1(wi, h, n);
+
+      return (specularCoef * F * D * G) / (4.0 * wi.dot(n) * wo.dot(n)) + (1 - specularCoef) / PI;
+  }
+  else if (b == BECKMANN) {
+      Vec h = (wo + wi).norm();
+
+      double F = fresnel(h.dot(wi));
+      double D = beckmannDist(h, n);
+      double G = beckmannG1(wo, h, n) * beckmannG1(wi, h, n);
+
+      return (specularCoef * F * D * G) / (4.0 * wi.dot(n) * wo.dot(n)) + (1 - specularCoef) / PI;
+  }
+  else if (b == PHONG) {
+      Vec h = (wo + wi).norm();
+
+      double F = fresnel(h.dot(wi));
+      double D = (alpha + 2) * pow (h.dot(n), alpha) / (2 * PI);
+      double G = phongG1(wo, h, n) * phongG1(wi, h, n);
 
       return (specularCoef * F * D * G) / (4.0 * wi.dot(n) * wo.dot(n)) + (1 - specularCoef) / PI;
   }
@@ -48,12 +66,11 @@ double inline MaterialType::fresnel(double c) const {
   return F;
 }
 
-double MaterialType::ggxDistribution(const Vec &h,const Vec &n) const {
+double MaterialType::ggxDist(const Vec &h,const Vec &n) const {
   double cosine_sq = h.dot(n);
-
   cosine_sq *= cosine_sq;
   double tan_sq = 1.0 / cosine_sq - 1.0;
-  double alpha_sq = ggxAlpha * ggxAlpha;
+  double alpha_sq = alpha * alpha;
 
   tan_sq += alpha_sq;
   tan_sq *= tan_sq;
@@ -64,7 +81,6 @@ double MaterialType::ggxDistribution(const Vec &h,const Vec &n) const {
 
 double MaterialType::ggxG1(const Vec &v, const Vec &h, const Vec &n) const {
   double cosv_sq = v.dot(n);
-
   cosv_sq *= cosv_sq;
   double tanv_sq = 1.0 / cosv_sq - 1.0;
 
@@ -73,12 +89,60 @@ double MaterialType::ggxG1(const Vec &v, const Vec &h, const Vec &n) const {
   else if (h.dot(v) <= 1e-15)
     return 0;
 
-  double alpha_sq = ggxAlpha * ggxAlpha;
+  double alpha_sq = alpha * alpha;
 
   tanv_sq *= alpha_sq;
   tanv_sq += 1.0;
   tanv_sq = 1.0 + sqrt(tanv_sq);
 
   return 2.0/tanv_sq;
+}
+
+double MaterialType::beckmannDist(const Vec &h, const Vec &n) const {
+  double cosine_sq = h.dot(n);
+  cosine_sq *= cosine_sq;
+  double tan_sq = 1.0 / cosine_sq - 1.0;
+  double alpha_sq = alpha * alpha;
+
+  tan_sq /= alpha_sq;
+  tan_sq *= -1.0;
+
+  return exp(tan_sq) / (PI * cosine_sq * cosine_sq * alpha_sq);
+}
+
+double MaterialType::beckmannG1(const Vec &v, const Vec &h, const Vec &n) const {
+  double cosv_sq = v.dot(n);
+  cosv_sq *= cosv_sq;
+  double a = 1.0 / (alpha * sqrt(1.0 / cosv_sq - 1.0));
+
+  if (cosv_sq >= 0.999999)
+    return 1.0;
+  else if (h.dot(v) <= 1e-15)
+    return 0;
+
+  if (a < 1.6) {
+    return (3.535 * a + 2.181 * a * a) / (1.0 + 2.276 * a + 2.577 * a * a);
+  }
+
+  return 1;
+}
+
+double MaterialType::phongG1(const Vec &v, const Vec &h, const Vec &n) const {
+  double cosv_sq = v.dot(n);
+  cosv_sq *= cosv_sq;
+  double a = 0.5 * alpha + 1;
+  a /= (1.0 / cosv_sq - 1.0);
+  a = sqrt(a);
+
+  if (cosv_sq >= 0.999999)
+    return 1.0;
+  else if (h.dot(v) <= 1e-15)
+    return 0;
+
+  if (a < 1.6) {
+    return (3.535 * a + 2.181 * a * a) / (1.0 + 2.276 * a + 2.577 * a * a);
+  }
+
+  return 1;
 }
 

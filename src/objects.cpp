@@ -42,13 +42,13 @@ void loadObjects() {
   vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.000, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5, NONE, Vec(0., 0., 0.))));
   */
-  //vSphereList.push_back(Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25 * 0, .25 * 0), 1.0, MaterialType(3.2, 0.0)));
-  //vSphereList.push_back(Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25 * 0, .25 * 0, .75), 1.0, MaterialType(3.2, 0.0)));
-  //vSphereList.push_back(Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 0.0)));
-  //vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(0.2, 10000.5, 1, 0.9)));
-  //vSphereList.push_back(Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(0*.75, .75, .75), 1.0, MaterialType(1, 10000.5, 1, 0.9)));
-  //vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, MaterialType(0.01, 10000.5, 1, 0.9)));
- // vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 0.0)));
+  vSphereList.push_back(Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(.75, .25 * 0, .25 * 0), 1.0, MaterialType(3.2, 0.0)));
+  vSphereList.push_back(Sphere(1e5,  Vec(-1e5 + 99, 40.8, 81.6), Vec(.25 * 0, .25 * 0, .75), 1.0, MaterialType(3.2, 0.0)));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 40.8, 1e5), Vec(0*.75, .75, 0*.75), 1.0, MaterialType(3.2, 0.0)));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, 1e5, 81.6), Vec(.75, .75, .75), 1.0, MaterialType(0.2, 10000.5, 1, 0.9)));
+  vSphereList.push_back(Sphere(1e5,  Vec(50, -1e5 + 81.6, 81.6), Vec(0*.75, .75, .75), 1.0, MaterialType(1, 10000.5, 1, 0.9)));
+  vSphereList.push_back(Sphere(16.5,  Vec(27, 16.5, 47), Vec(.999, .999, .999), 1.0, MaterialType(0.01, 10000.5, 1, 0.9)));
+  vSphereList.push_back(Sphere(16.5,  Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1.0)));
   //Dummy
   vSphereList.push_back(Sphere(1,  Vec(27, 1e5, 47), Vec(.999, .999, .999), 1.0, MaterialType(200.2, 1)));
   //Sphere(1e5,  Vec(1e5 + 1, 40.8, 81.6), Vec(0, 0, 0), Vec(.75, .25, .25)),
@@ -74,11 +74,11 @@ void loadObjects() {
   //vTriangleList.push_back(Triangle(VC, VD, VA, Vec(0, 0.9, 0.9), 0.9, MaterialType(1.0, 0.5)));
   //vTriangleList.push_back(Triangle(VD, VA, VB, Vec(0.9, 0.0, 0.9), 0.9, MaterialType(1.0, 0.5)));
 
-  //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(5000.0, 0.5)));
-  //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(5000.0, 0.5)));
+  //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(400.0, 1)));
+  //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(400.0, 1)));
 
-  vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(.15, 10000, 1, 1)));
-  vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(.15, 10000, 1, 1)));
+  //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(400.2, 10000, 1, 1, PHONG)));
+  //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(400.2, 10000, 1, 1, PHONG)));
   /*  objLoader *objData = new objLoader();
   objData->load("Aventador1.obj");
 

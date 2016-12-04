@@ -2,7 +2,7 @@
 #define materialTypes_h__
 
 enum LightType {NONE = 0, POINT, VOLUME, PLANAR, MESH};
-enum BRDFType {BRDF_NONE = 0, CLASSIC_PHONG, GGX};
+enum BRDFType {BRDF_NONE = 0, CLASSIC_PHONG, GGX, BECKMANN, PHONG};
 class MaterialType {
   public:
     double phongExp; //Classical phong BRDF exponent
@@ -11,7 +11,7 @@ class MaterialType {
     double intIOR; //interior IOR(Index of Refraction)
     double extIOR; //exterior IOR
 
-    double ggxAlpha; // GGX BRDF roughness
+    double alpha; // GGX BRDF roughness
 
     LightType l;
     Vec radiance;
@@ -26,7 +26,7 @@ class MaterialType {
       phongExp = 0;
       specularCoef = 0;
 
-      ggxAlpha = 0;
+      alpha = 0;
       intIOR = 0;
       extIOR = 0;
 
@@ -41,7 +41,7 @@ class MaterialType {
       phongExp = 0;
       specularCoef = 0;
 
-      ggxAlpha = 0;
+      alpha = 0;
       intIOR = 0;
       extIOR = 0;
 
@@ -54,7 +54,7 @@ class MaterialType {
       specularCoef = (sC * ((sC < 0)? -1.0: 1.0));
       specularCoef = specularCoef <= 1 ? specularCoef : 1;
 
-      ggxAlpha = 0;
+      alpha = 0;
       intIOR = 0;
       extIOR = 0;
 
@@ -65,8 +65,8 @@ class MaterialType {
     }
 
     //For GGX Material
-    MaterialType(double alpha, double intIOR, double extIOR, double sC) {
-      ggxAlpha = alpha;
+    MaterialType(double alpha, double intIOR, double extIOR, double sC, BRDFType bt = GGX) {
+      this->alpha = alpha;
       this->intIOR = intIOR;
       this->extIOR = extIOR;
 
@@ -79,16 +79,22 @@ class MaterialType {
       l = NONE;
       radiance = Vec(0, 0, 0);
 
-      b = GGX;
+      b = bt;
     }
 
     double brdf(Vec n, Vec wo_ref, Vec wo, Vec wi);
   private:
     BRDFType b;
-    // Dot product product between Half angle and wi or wo.
+    // c = Dot product product between Half angle and wi or wo.
     double fresnel(double c) const;
-    double ggxDistribution(const Vec &h, const Vec &n) const;
+
+    double ggxDist(const Vec &h, const Vec &n) const;
     double ggxG1(const Vec &v, const Vec &h, const Vec &n) const;
+
+    double beckmannDist(const Vec &h, const Vec &n) const;
+    double beckmannG1(const Vec &v, const Vec &h, const Vec &n) const;
+
+    double phongG1(const Vec &v, const Vec &h, const Vec &n) const;
 };
 
 #endif
