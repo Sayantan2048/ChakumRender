@@ -13,7 +13,7 @@
 #include "ppm.h"
 
 #define MAX_SP_SAMPLES 		(1000) // Should be less than the No. of samples in domainSampler.h
-#define SP_SAMPLING_TYPE	32// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define SP_SAMPLING_TYPE	4// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 //16 for phong BRDF sampling(works only if all objects are pure phong!!).
 #define MAX_ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
 #define ENV_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Importance sampling.
@@ -595,21 +595,21 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     // returns 1/pdf.
-    double pdf = SphericalSampler::getLightSurfaceSample(sList[j].p.p, sList[j].p.r, x, sampleCount, samples);
+    double pdf = SphericalSampler::getLightDirectionSamples(sList[j].p.p, sList[j].p.r, x, sampleCount, samples);
 
     for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
-      rr.d = (samples[i] - x).norm();
+      rr.d = samples[i];
 
-      d = (samples[i] - x).length();
+      d = sList[j].p.intersect(rr);
 
       if (shadow(rr, d) < 0.5)
 	continue;
 
       cosine = rr.d.dot(n);
 
-      double cosine1 = rr.d.dot((samples[i] - sList[j].p.p).norm());
+      double cosine1 = rr.d.dot((x + rr.d * d - sList[j].p.p).norm());
       cosine1 = cosine1 < 0 ? -cosine1 : 0;
 
       if (cosine < 0) {
@@ -760,7 +760,6 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
       }
 
       brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
-
       sum += (cosine * brdf * weight[i]);
     }
     sumLight = sumLight + sList[j].radiance * sum;

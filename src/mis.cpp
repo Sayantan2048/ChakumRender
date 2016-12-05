@@ -28,16 +28,6 @@ struct Pdf {
 	return 0.;
     }
     else if (t == SuArISSP) {
-      /*Vec d = (sample - x).norm();
-      double eps = (sample - spC).length() - r;
-      if (eps * eps < 1e-20) {
-	double length = (sample - x).length();
-	double cosine1 = d.dot((sample - spC).norm());
-	cosine1 = cosine1 < 0 ? -cosine1 : 1e-40;
-	return (capAreaInv * length * length)/cosine1;
-      }
-      else
-	return 0.;*/
       Ray r(x, sample);
       double d;
       if ((d = sS->p.intersect(r)) < INF) {
@@ -54,7 +44,7 @@ struct Pdf {
     else if (t == PhBrIS) {
       double cosine = sample.dot(wr);
       cosine = cosine > 0 ? cosine : 0;
-      return capAreaInv * pow(cosine, e) / 10;
+      return capAreaInv * pow(cosine, e);
     }
     else {
       std::cerr<<"No Such PDF!!\n";
@@ -111,6 +101,7 @@ uint32_t MIS::getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, double e, Vec *sample
       p.capAreaInv = (e + 1.0)/(2 * PI);
       p.wr = wo_ref;
       p.x = x;
+      p.e = e;
       p.t = PhBrIS;
       p.N = nPhBrIS;
       pdf.push_back(p);
