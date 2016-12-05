@@ -99,7 +99,7 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
   Vec light = lSource->getLightFromPointSources(r, N, x, list) +
-	lSource->getLightFromSphereSources(r, N, x, list, 50) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
+	lSource->getLightFromSphereSources(r, N, x, list, 100) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
 	+ lSource->getLightFromTriSources(r, N, x, list, 100) + lSource->getLightFromMeshSources(r, N, x, list, 1);
   //Vec light = lSource->getLightFromMeshSource_CVNoShadow(r, N, x, list, 1);
   return list->c.mult(light); // Compute color of intersection.
@@ -159,8 +159,8 @@ Vec shadeExplicit(const Ray &r) {
 
     do {
       rayStatus = 1;
-      pdf = SphericalSampler::getHemiSurfaceSamples(n, x, 1, sample);
-      secondaryRay.d = (sample[0] - x).norm();
+      pdf = SphericalSampler::getHemiDirectionSamples(n, 1, sample);
+      secondaryRay.d = sample[0];
 
       iTriangle = intersectTriangle(secondaryRay, tT, nT, idT, nTriangles, triangleList);
       iSphere = intersectSphere(secondaryRay, tS, nS, idS, nSpheres, sphereList);
@@ -232,7 +232,7 @@ Vec shadeExplicitFirstBounce(const Ray &r) {
   if (ptr->m.l != NONE)
 	return hitLightSource;
 
-  double pdfInv = SphericalSampler::getHemiSurfaceSamples(n, x, maxSamples, samples);
+  double pdfInv = SphericalSampler::getHemiDirectionSamples(n, maxSamples, samples);
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
@@ -243,7 +243,7 @@ Vec shadeExplicitFirstBounce(const Ray &r) {
   uint32_t nIndirectRays = 0;
   Vec indirectIllumination;
   for (uint32_t i = 0; i < maxSamples && nIndirectRays < EXPLICIT_SAMPLES; i++) {
-    secondaryRay.d = (samples[i] - x).norm();
+    secondaryRay.d = samples[i];
 
     iTriangle = intersectTriangle(secondaryRay, tT, nT, idT, nTriangles, triangleList);
     iSphere = intersectSphere(secondaryRay, tS, nS, idS, nSpheres, sphereList);

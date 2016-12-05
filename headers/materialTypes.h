@@ -85,6 +85,7 @@ class MaterialType {
 
     double brdf(Vec n, Vec wo_ref, Vec wo, Vec wi);
     void getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *samples, double *weights, uint32_t nSamples);
+    double pdfEval(Vec n, Vec wo_ref, Vec wo, Vec wi);
   private:
     BRDFType b;
     // c = Dot product product between Half angle and wi or wo.

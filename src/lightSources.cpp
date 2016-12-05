@@ -13,7 +13,7 @@
 #include "ppm.h"
 
 #define MAX_SP_SAMPLES 		(1000) // Should be less than the No. of samples in domainSampler.h
-#define SP_SAMPLING_TYPE	4// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define SP_SAMPLING_TYPE	16// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 //16 for phong BRDF sampling(works only if all objects are pure phong!!).
 #define MAX_ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
 #define ENV_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Importance sampling.
@@ -127,7 +127,7 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
   wo_ref.norm();
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, sampleCount, samples);
+  double pdf = SphericalSampler::getHemiDirectionSamples(n, sampleCount, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
   Vec dummy;
@@ -136,7 +136,7 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
     for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
-      rr.d = (samples[i] - x);
+      rr.d = samples[i];
 
       uint32_t id;
       if (!mList[j].intersect(rr, id, d, dummy))
@@ -261,7 +261,7 @@ Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x
   wo_ref.norm();
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, sampleCount, samples);
+  double pdf = SphericalSampler::getHemiDirectionSamples(n, sampleCount, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
   Vec dummy;
@@ -270,7 +270,7 @@ Vec LightSource::getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x
     for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
-      rr.d = (samples[i] - x);
+      rr.d = samples[i];
 
       d = tList[j].t.intersect(rr, dummy);
 
@@ -359,12 +359,12 @@ Vec LightSource::getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x,
   wo_ref.norm();
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, sampleCount, samples);
+  double pdf = SphericalSampler::getHemiDirectionSamples(n, sampleCount, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
   for (uint32_t i = 0; i < sampleCount; i++) {
-    rr.d = (samples[i] - x);
+    rr.d = samples[i];
 
     if (shadow(rr, INF) < 0.5)
       continue;
@@ -439,7 +439,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   wo_ref.norm();
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiSurfaceSamples(n, x, sampleCount, samples);
+  double pdf = SphericalSampler::getHemiDirectionSamples(n, sampleCount, samples);
   //SphericalSampler::getDistribution(n, x, SP_SAMPLES, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
@@ -449,7 +449,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
     for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
-      rr.d = (samples[i] - x);
+      rr.d = samples[i];
 
       d = sList[j].p.intersect(rr);
 
@@ -475,7 +475,6 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 }
 
 #elif SP_SAMPLING_TYPE & 2
-/*
 Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (sList.size() < 1) return Vec();
   const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
@@ -496,12 +495,12 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
     Vec w = sList[j].p.p - x;
     double sinThetaMax = sList[j].p.r/w.length();
     // returns 1/pdf.
-    double pdf = SphericalSampler::getSolidSurfaceSamples(w, x, asin(sinThetaMax), sampleCount, samples);
+    double pdf = SphericalSampler::getSolidDirectionSamples(w, asin(sinThetaMax), sampleCount, samples);
     //samples[SP_SAMPLES - 1] = x + w.norm();
     for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
-      rr.d = (samples[i] - x);
+      rr.d = samples[i];
 
       d = sList[j].p.intersect(rr);
 
@@ -524,57 +523,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
     sumLight = sumLight + sList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
-}*/
-Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
-  if (sList.size() < 1) return Vec();
-  const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
-  double cosine = 0;
-  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
-  double eps = 1e-08;
-  double brdf = 0;
-  Vec samples[sampleCount] = {0};
-  double weights[sampleCount] = {0};
-
-  Vec sumLight = Vec();
-  rr.o = x + n * eps;
-
-  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
-  wo_ref.norm();
-
-  // Sample BRDF direction
-  primitive->m.getBrdfDirectionSamples(n, wo_ref, r.d * -1.0, samples, weights, sampleCount);
-
-  for (uint32_t j = 0; j < sList.size(); j++) {
-    double sum = 0;
-    for (uint32_t i = 0; i < sampleCount; i++) {
-      double d;
-
-      rr.d = samples[i];
-
-      d = sList[j].p.intersect(rr);
-
-      if (d >= INF)
-	continue;
-
-      if (shadow(rr, d) < 0.5)
-	continue;
-
-      cosine = rr.d.dot(n);
-
-      if (cosine < 0) {
-	 // This code colors the dark side of an object black.
-	  continue;
-      }
-
-      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
-
-      sum += (brdf * cosine * weights[i]);
-    }
-    sumLight = sumLight + sList[j].radiance * ( sum/sampleCount);
-  }
-  return sumLight;
 }
-
 
 #elif SP_SAMPLING_TYPE & 4
 Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
@@ -681,7 +630,9 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   double cosine = 0;
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double eps = 1e-08;
+  double brdf = 0;
   Vec samples[sampleCount] = {0};
+  double weights[sampleCount] = {0};
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
@@ -689,8 +640,8 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
 
-  // returns 1/pdf.
-  double pdf = SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, primitive->m.phongExp, sampleCount, samples);
+  // Sample BRDF direction
+  primitive->m.getBrdfDirectionSamples(n, wo_ref, r.d * -1.0, samples, weights, sampleCount);
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
@@ -714,9 +665,11 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 	  continue;
       }
 
-      sum += cosine;
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
+
+      sum += (brdf * cosine * weights[i]);
     }
-    sumLight = sumLight + sList[j].radiance * ( pdf * sum/sampleCount);
+    sumLight = sumLight + sList[j].radiance * ( sum/sampleCount);
   }
   return sumLight;
 }

@@ -81,17 +81,17 @@ double SphericalSampler::getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *s
     return 2.0 * PI / 3.0;
 }
 
-double SphericalSampler::getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getHemiDirectionSamples(Vec n, int nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
-      store[j] = n.dot(sampleSurface[i]) >= 0? x+sampleSurface[i] : x-sampleSurface[i];
+      store[j] = n.dot(sampleSurface[i]) >= 0? sampleSurface[i] : sampleSurface[i] * - 1.0;
 
     return 2.0 * PI;
 }
 
-double SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getHemiDirectionSamplesTrue(Vec n, int nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
 
     double sx, sy, sz;
@@ -103,7 +103,7 @@ double SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, V
 
       if ((sx*sx + sy*sy + sz*sz <= 1)) {
 	s = Vec(sx, sy, sz).norm();
-	store[i] = n.dot(s) >= 0? x + s : x - s;
+	store[i] = n.dot(s) >= 0? s : s * -1.0;
 	i++;
       }
     }
@@ -172,8 +172,8 @@ double SphericalSampler::getCosineDirectionSamples(Vec n, int nSamples, Vec *sto
     return PI;
 }
 
-// GGX sampling.
-double SphericalSampler::getGGXDirectionSamples(Vec n, Vec wo, double alpha, int nSamples, Vec *store) {
+// GGX, BECKMANN, PHONG sampling.
+double SphericalSampler::getBrdfDirectionSamples(Vec n, Vec wo, double alpha, int nSamples, Vec *store, BRDFType b) {
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
 
@@ -198,9 +198,25 @@ double SphericalSampler::getGGXDirectionSamples(Vec n, Vec wo, double alpha, int
     for (int i = 0, j = offset & 0xFFFFFFF0; i < nSamples; i++, j += 2) {
       double e1 = randoms[j];
       double e2 = randoms[j+1];
-      double tantheta = alpha * sqrt(e1) / sqrt(1 - e1 + 1e-10);
-      double costheta = 1.0 / sqrt(1 + tantheta * tantheta);
-      double sintheta = tantheta * costheta;
+      double costheta = 0;
+      double sintheta = 0;
+      if (b == GGX) {
+	double tantheta = alpha * sqrt(e1) / sqrt(1 - e1 + 1e-10);
+	costheta = 1.0 / sqrt(1 + tantheta * tantheta);
+	sintheta = tantheta * costheta;
+      }
+      else if (b == BECKMANN) {
+	double tantheta = sqrt(alpha * alpha * log (1 - e1 + 1e-20) * -1.0);
+	costheta = 1.0 / sqrt(1 + tantheta * tantheta);
+	sintheta = tantheta * costheta;
+      }
+      else if (b == PHONG) {
+	costheta = pow(e1, 1.0 / (alpha + 2.0));
+	sintheta = sqrt(1.0 - costheta * costheta);
+      }
+      else
+	fprintf (stderr, "Cannot Identify BRDF Type.\n");
+
       double phi = 2 * PI * e2;
 
       double cosphi = cos(phi);

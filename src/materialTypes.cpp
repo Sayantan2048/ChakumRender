@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 
+// Assumes wo.dot(n) and wi.dot(n) are positive
 double MaterialType::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi) {
   if (b == CLASSIC_PHONG) {
     double cosine = wo_ref.dot(wi);
@@ -43,28 +44,50 @@ double MaterialType::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi) {
   return 0.0;
 }
 
-void MaterialType::getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *samples, double *weights, uint32_t nSamples) {
-  uint32_t nBrdfSamples = nSamples * specularCoef;
-  double divideByZero = 1e-10;
+double MaterialType::pdfEval(Vec n, Vec wo_ref, Vec wo, Vec wi) {
+
+  // Assumes Cosine weighted sampling
+  double diffuse = (1.0 - specularCoef) * wi.dot(n) / PI;
+  double spec = specularCoef;
 
   if (b == CLASSIC_PHONG) {
-    SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, phongExp, nBrdfSamples, samples);
-    for (uint32_t i = 0; i < nBrdfSamples; i++)
-      weights[i] = 2 * PI / ((phongExp + 1)  * pow(samples[i].dot(wo_ref), phongExp) + divideByZero);
+      spec *= ((phongExp + 1)  * pow(wi.dot(wo_ref), phongExp)) / (2 * PI);
   }
-  else if (b == GGX) {
-    SphericalSampler::getGGXDirectionSamples(n, wo, alpha, nBrdfSamples, samples);
-    for (uint32_t i = 0; i < nBrdfSamples; i++) {
-      Vec h = (wo + samples[i]).norm();
-      weights[i] = 4.0 * h.dot(wo) / (ggxDist(h, n) * h.dot(n) + divideByZero);
-    }
+  else if (b == GGX || b == BECKMANN || b == PHONG) {
+      Vec h = (wo + wi).norm();
+      double D = 0;
+      if (b == GGX)
+	D = ggxDist(h, n);
+      else if (b == BECKMANN)
+	D = beckmannDist(h, n);
+      else if (b == PHONG)
+	D = (alpha + 2) * pow (h.dot(n), alpha) / (2 * PI);
+
+      spec *= D * h.dot(n) / (4.0 * h.dot(wo));
   }
   else
     std::cerr<<"Undefined BRDF sampling!!\n";
 
-  double pdfInv = SphericalSampler::getCosineDirectionSamples(n, nSamples - nBrdfSamples, samples + nBrdfSamples);
-  for (uint32_t i = nBrdfSamples; i < nSamples - nBrdfSamples; i++)
-    weights[i] = pdfInv / (samples[i].dot(n) + divideByZero);
+  return spec + diffuse;
+
+}
+
+void MaterialType::getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *samples, double *weights, uint32_t nSamples) {
+  uint32_t nBrdfSamples = nSamples * specularCoef;
+  const static double divideByZero = 1e-10;
+
+  if (b == CLASSIC_PHONG)
+    SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, phongExp, nBrdfSamples, samples);
+  else if (b == GGX || b == BECKMANN || b == PHONG)
+    SphericalSampler::getBrdfDirectionSamples(n, wo, alpha, nBrdfSamples, samples, b);
+  else
+    std::cerr<<"Undefined BRDF sampling!!\n";
+
+  // If you replace diffuse sampling with any other scehem then change the diffuse pdf in pdfEval
+  SphericalSampler::getCosineDirectionSamples(n, nSamples - nBrdfSamples, samples + nBrdfSamples);
+
+  for (uint32_t i = 0; i < nSamples && weights != 0; i++)
+    weights[i] = 1.0 / (pdfEval(n, wo_ref, wo, samples[i]) + divideByZero);
 }
 
 //See Microfacet BSDF paper, Bruce Walter
