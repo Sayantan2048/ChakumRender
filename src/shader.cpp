@@ -99,7 +99,7 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
   Vec light = lSource->getLightFromPointSources(r, N, x, list) +
-	lSource->getLightFromSphereSources(r, N, x, list, 1) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
+	lSource->getLightFromSphereSources(r, N, x, list, 50) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
 	+ lSource->getLightFromTriSources(r, N, x, list, 100) + lSource->getLightFromMeshSources(r, N, x, list, 1);
   //Vec light = lSource->getLightFromMeshSource_CVNoShadow(r, N, x, list, 1);
   return list->c.mult(light); // Compute color of intersection.
@@ -314,12 +314,12 @@ Vec shadeImplicit(const Ray &r) {
 	double cosine = 1;
 	// avoid devide by zero with addition of extra term 0.000001
 	if (e > ptr->m.specularCoef) {
-	  pdfInv = SphericalSampler::getCosineSurfaceSamples(n, x, 1, sample);
-	  secondaryRay.d = (sample[0] - x).norm();
+	  pdfInv = SphericalSampler::getCosineDirectionSamples(n, 1, sample);
+	  secondaryRay.d = sample[0];
 	}
 	else {
-	  SphericalSampler::getPhongBRDFSamples(n, wo_ref, x, ptr->m.phongExp, 1, sample);
-	  secondaryRay.d = (sample[0] - x).norm();
+	  SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, ptr->m.phongExp, 1, sample);
+	  secondaryRay.d = sample[0];
 	  pdfInv =  (2 * PI) / ((ptr->m.phongExp + 1.0) * (pow(secondaryRay.d.dot(wo_ref), ptr->m.phongExp) + 0.000001));
 	  cosine = secondaryRay.d.dot(n);
 	}
@@ -358,11 +358,11 @@ Vec shadeDirectOnly(const Ray &r) {
 
 // R.d must be normalized before passing to shade.
 Vec shade(const Ray &r, int &depth) {
-#if 0
+#if 1
   return shadeDirectOnly(r);
 #endif
 
-#if 1
+#if 0
   return shadeImplicit(r);
 #endif
 

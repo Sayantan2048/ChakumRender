@@ -112,13 +112,13 @@ double SphericalSampler::getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, V
 }
 
 // Importance sampling as per visible surface of light from a point x.
-double SphericalSampler::getLightSurfaceSample(Vec c, double r, Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getLightDirectionSamples(Vec c, double r, Vec x, int nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     Vec dir = (x - c).norm();
     // 0xFFFFFFF0 gives better alignment and performance!!
     for (int i = offset & 0xFFFFFFF0, j = 0; j < nSamples; i++, j++)
-      store[j] = dir.dot(sampleSurface[i]) >= 0? c + sampleSurface[i] * r : c - sampleSurface[i] * r;
+      store[j] = dir.dot(sampleSurface[i]) >= 0? (c + sampleSurface[i] * r - x).norm(): (c - sampleSurface[i] * r - x).norm();
 
     return 2 * PI * r * r;
 }
@@ -138,7 +138,7 @@ void SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, c
 }
 
 // Cosine weighted surface sampling.
-double SphericalSampler::getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Vec *store) {
+double SphericalSampler::getCosineDirectionSamples(Vec n, int nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES); // We'll use one sample on every iteration.
 
@@ -164,18 +164,66 @@ double SphericalSampler::getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Ve
       double y = cosineSurfaceSamples[i].y;
       double z = cosineSurfaceSamples[i].z;
 
-      Vec sample = Vec(x * newX.x + y * newY.x + z * n.x,
+      store[j] = Vec(x * newX.x + y * newY.x + z * n.x,
 		     x * newX.y + y * newY.y + z * n.y,
 		     x * newX.z + y * newY.z + z * n.z);
-
-      store[j] = sample + x0;
     }
 
     return PI;
 }
 
-// Get phong cosine lobe around w, centered at x0 with exponent e.
-double SphericalSampler::getPhongBRDFSamples(Vec n, Vec w, Vec x0, double e, int nSamples, Vec *store) {
+// GGX sampling.
+double SphericalSampler::getGGXDirectionSamples(Vec n, Vec wo, double alpha, int nSamples, Vec *store) {
+    Random random(clock() & 0xFFFFFFFF);
+    int offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
+
+    n.norm(); // Z - axis is transfomed to this axis.
+    wo.norm();
+
+    Vec newX; // X - axis transfomed to this axis.
+    // Let's find a Vector perpendicular to n.
+    if (n.x != 0)
+      newX = Vec((-n.y-n.z)/n.x, 1.0, 1.0);
+    else if (n.y != 0)
+      newX = Vec(1.0,  -n.z/n.y, 1.0); // since n.x is zero, we can simplify 2nd dimension
+    else if (n.z != 0)
+      newX = Vec(1.0, 1.0, 0); // Since both n.x and n.y are zero.
+    else
+      fprintf (stderr, "WTF is n??\n");
+
+    newX.norm();
+
+    Vec newY = (n%newX).norm();
+
+    for (int i = 0, j = offset & 0xFFFFFFF0; i < nSamples; i++, j += 2) {
+      double e1 = randoms[j];
+      double e2 = randoms[j+1];
+      double tantheta = alpha * sqrt(e1) / sqrt(1 - e1 + 1e-10);
+      double costheta = 1.0 / sqrt(1 + tantheta * tantheta);
+      double sintheta = tantheta * costheta;
+      double phi = 2 * PI * e2;
+
+      double cosphi = cos(phi);
+      double sinphi = sin(phi);
+
+      // Compute half vector.
+      double xh = sintheta * cosphi;
+      double yh = sintheta * sinphi;
+      double zh = costheta;
+
+      //Apply transformation, rotate
+      Vec h = Vec(xh * newX.x + yh * newY.x + zh * n.x,
+		  xh * newX.y + yh * newY.y + zh * n.y,
+		  xh * newX.z + yh * newY.z + zh * n.z);
+
+      store[i] = (h * 2.0 * (h.dot(wo)) - wo).norm();
+    }
+
+    return 1.0;
+}
+
+// Get phong cosine lobe around w, with exponent e.
+double SphericalSampler::getClassicPhongDirectionSamples(Vec n, Vec w, double e, int nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
     n.norm();
@@ -212,11 +260,11 @@ double SphericalSampler::getPhongBRDFSamples(Vec n, Vec w, Vec x0, double e, int
       double z = costheta;
 
       //Apply transformation, rotate
-      Vec sample = Vec(x * newX.x + y * newY.x + z * w.x,
+      store[i] = Vec(x * newX.x + y * newY.x + z * w.x,
 		       x * newX.y + y * newY.y + z * w.y,
 		       x * newX.z + y * newY.z + z * w.z);
 
-      store[i] = sample + x0;
+
     }
 
     return 1; // For normalized phong.
@@ -226,7 +274,7 @@ double SphericalSampler::getPhongBRDFSamples(Vec n, Vec w, Vec x0, double e, int
 //Solid angle imortance sampling!!
 //Sample around w as axis, centered at x with sample points making maximum angle of theta_max with w.
 // This implementation is slower but numerically more stable.
-double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x0, double theta_max, int nSamples, Vec *store) {
+double SphericalSampler::getSolidDirectionSamples(Vec w, double theta_max, int nSamples, Vec *store) {
   // calculate area of cap using cap-hat theorem
   double A = 2.0 * PI * (1 - cos(theta_max));
 
@@ -266,11 +314,9 @@ double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x0, double theta_max,
     double z = costheta;
 
     //Apply transformation, rotate
-    Vec sample = Vec(x * newX.x + y * newY.x + z * w.x,
+    store[i] = Vec(x * newX.x + y * newY.x + z * w.x,
 		     x * newX.y + y * newY.y + z * w.y,
 		     x * newX.z + y * newY.z + z * w.z);
-
-    store[i] = sample + x0;
   }
 
   return A;

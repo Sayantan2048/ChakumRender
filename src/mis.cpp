@@ -10,10 +10,9 @@ enum PdfType {SoAnISSP = 0, SuArISSP, CoIS, PhBrIS};
 
 struct Pdf {
   double capAreaInv; // Solid Angle Sampling.
-  double cosThetaMax; // Solid Angle Sampling.
-  Vec lightDir; // Solid Angle Sampling.
-  Vec spC; // Center of sphereLight, for Surface area importance sampling.
-  double r;
+  double cosThetaMax; // Solid Angle Sampling
+  Vec lightDir; // Solid Angle Sampling
+  SphereSource *sS;
   double e;
   Vec x;
   Vec n;
@@ -23,14 +22,13 @@ struct Pdf {
   double pdfVal(Vec sample) {
     if (t == SoAnISSP) {
       // if the sample lies withing thetaMax of lightDir, then return 1/capArea;
-      Vec d = (sample - x).norm();
-      if (d.dot(lightDir) >= cosThetaMax)
+      if (sample.dot(lightDir) >= cosThetaMax)
 	return capAreaInv;
       else
 	return 0.;
     }
     else if (t == SuArISSP) {
-      Vec d = (sample - x).norm();
+      /*Vec d = (sample - x).norm();
       double eps = (sample - spC).length() - r;
       if (eps * eps < 1e-20) {
 	double length = (sample - x).length();
@@ -39,17 +37,24 @@ struct Pdf {
 	return (capAreaInv * length * length)/cosine1;
       }
       else
-	return 0.;
+	return 0.;*/
+      Ray r(x, sample);
+      double d;
+      if ((d = sS->p.intersect(r)) < INF) {
+	double cosine1 = sample.dot((x + sample * d - sS->p.p).norm());
+	cosine1 = cosine1 < 0 ? -cosine1 : 1e-5;
+	return (capAreaInv * d * d)/cosine1;
+      }
+      else
+	return 0;
     }
     else if (t == CoIS) {
-      Vec d = (sample - x).norm();
-      return d.dot(n) * capAreaInv;
+      return sample.dot(n) * capAreaInv;
     }
     else if (t == PhBrIS) {
-      Vec d = (sample - x).norm();
-      double cosine = d.dot(wr);
+      double cosine = sample.dot(wr);
       cosine = cosine > 0 ? cosine : 0;
-      return capAreaInv * pow(cosine, e);
+      return capAreaInv * pow(cosine, e) / 10;
     }
     else {
       std::cerr<<"No Such PDF!!\n";
@@ -58,7 +63,7 @@ struct Pdf {
   }
 };
 
-uint32_t MIS::getSamples(Vec x, Vec n, Vec wo, double e, Vec *samples, double *weight) {
+uint32_t MIS::getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, double e, Vec *samples, double *weight) {
     std::vector<Pdf> pdf;
 
     uint32_t offset = 0;
@@ -67,9 +72,8 @@ uint32_t MIS::getSamples(Vec x, Vec n, Vec wo, double e, Vec *samples, double *w
       Pdf p;
       Vec w = sList[i].p.p - x;
       double sinThetaMax = sList[i].p.r/w.length();
-      double capArea = SphericalSampler::getSolidSurfaceSamples(w, x, asin(sinThetaMax), nSoAnIS - 1, samples + offset);
-      samples[nSoAnIS - 1 + offset] = x + w.norm();
-      p.lightDir = w;
+      double capArea = SphericalSampler::getSolidDirectionSamples(w, asin(sinThetaMax), nSoAnIS, samples + offset);
+      p.lightDir = w.norm();
       p.capAreaInv = 1.0/capArea;
       p.cosThetaMax = sqrt(1 - sinThetaMax * sinThetaMax);
       p.x = x;
@@ -80,11 +84,10 @@ uint32_t MIS::getSamples(Vec x, Vec n, Vec wo, double e, Vec *samples, double *w
 
     for (uint32_t i = 0; i < nSS && nSuArIS > 0; i++, offset += nSuArIS) {
       Pdf p;
-      double capArea = SphericalSampler::getLightSurfaceSample(sList[i].p.p, sList[i].p.r, x, nSuArIS, samples + offset);
+      double capArea = SphericalSampler::getLightDirectionSamples(sList[i].p.p, sList[i].p.r, x, nSuArIS, samples + offset);
+      p.sS = &sList[i];
       p.capAreaInv = 1.0/capArea;
       p.x = x;
-      p.spC = sList[i].p.p;
-      p.r = sList[i].p.r;
       p.t = SuArISSP;
       p.N = nSuArIS;
       pdf.push_back(p);
@@ -92,25 +95,26 @@ uint32_t MIS::getSamples(Vec x, Vec n, Vec wo, double e, Vec *samples, double *w
 
     if (nCoIS > 0) {
       Pdf p;
-      double capArea = SphericalSampler::getCosineSurfaceSamples(n, x, nCoIS, samples + offset);
+      double capArea = SphericalSampler::getCosineDirectionSamples(n, nCoIS, samples + offset);
       p.capAreaInv = 1.0/capArea;
       p.x = x;
       p.n = n;
       p.t = CoIS;
       p.N = nCoIS;
       pdf.push_back(p);
+      offset += nCoIS;
     }
 
     if (nPhBrIS > 0) {
       Pdf p;
-      Vec wr =  n * 2.0 * (n.dot(wo * -1.0)) + wo;
-      SphericalSampler::getPhongBRDFSamples(n, wr, x, e, nPhBrIS, samples + offset);
+      SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, e, nPhBrIS, samples + offset);
       p.capAreaInv = (e + 1.0)/(2 * PI);
-      p.wr = wr.norm();
+      p.wr = wo_ref;
       p.x = x;
       p.t = PhBrIS;
       p.N = nPhBrIS;
       pdf.push_back(p);
+      offset += nPhBrIS;
     }
 
 /*

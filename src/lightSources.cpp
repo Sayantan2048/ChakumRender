@@ -13,7 +13,7 @@
 #include "ppm.h"
 
 #define MAX_SP_SAMPLES 		(1000) // Should be less than the No. of samples in domainSampler.h
-#define SP_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define SP_SAMPLING_TYPE	32// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 //16 for phong BRDF sampling(works only if all objects are pure phong!!).
 #define MAX_ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
 #define ENV_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Importance sampling.
@@ -49,7 +49,7 @@ void configureLightSources() {
   //lSource->addPSource(PointSource(Vec(50, 40.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)));
   //lSource->addSSource(SphereSource(Vec(10.0, 0.0, 0.0), Sphere(10, Vec(20, 40.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(5.0, 0.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
-  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(50, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(80, Vec(50, 100, -400), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //Veach Scene
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
@@ -75,7 +75,7 @@ void configureLightSources() {
 
   mesh1.initMeshLight();
   lSource->addMSource(mesh1);*/
-
+/*
  MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(30, 68, 60), Vec(30, 68, 100), Vec(70, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
@@ -83,7 +83,7 @@ void configureLightSources() {
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 68, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 0, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);
+  lSource->addMSource(mesh1);*/
 /*
   MeshLight mesh2;
   Vec A = Vec(30, 68, 60);
@@ -475,6 +475,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
 }
 
 #elif SP_SAMPLING_TYPE & 2
+/*
 Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (sList.size() < 1) return Vec();
   const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
@@ -523,7 +524,57 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
     sumLight = sumLight + sList[j].radiance * ( pdf * sum/sampleCount);
   }
   return sumLight;
+}*/
+Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
+  if (sList.size() < 1) return Vec();
+  const uint32_t sampleCount = nSamples > MAX_SP_SAMPLES ? MAX_SP_SAMPLES : nSamples;
+  double cosine = 0;
+  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
+  double eps = 1e-08;
+  double brdf = 0;
+  Vec samples[sampleCount] = {0};
+  double weights[sampleCount] = {0};
+
+  Vec sumLight = Vec();
+  rr.o = x + n * eps;
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
+
+  // Sample BRDF direction
+  primitive->m.getBrdfDirectionSamples(n, wo_ref, r.d * -1.0, samples, weights, sampleCount);
+
+  for (uint32_t j = 0; j < sList.size(); j++) {
+    double sum = 0;
+    for (uint32_t i = 0; i < sampleCount; i++) {
+      double d;
+
+      rr.d = samples[i];
+
+      d = sList[j].p.intersect(rr);
+
+      if (d >= INF)
+	continue;
+
+      if (shadow(rr, d) < 0.5)
+	continue;
+
+      cosine = rr.d.dot(n);
+
+      if (cosine < 0) {
+	 // This code colors the dark side of an object black.
+	  continue;
+      }
+
+      brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
+
+      sum += (brdf * cosine * weights[i]);
+    }
+    sumLight = sumLight + sList[j].radiance * ( sum/sampleCount);
+  }
+  return sumLight;
 }
+
 
 #elif SP_SAMPLING_TYPE & 4
 Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
@@ -585,7 +636,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   Vec samples[sampleCount] = {0};
 
   // returns 1/pdf.
-  double pdf = SphericalSampler::getCosineSurfaceSamples(n, x, sampleCount, samples);
+  double pdf = SphericalSampler::getCosineDirectionSamples(n, sampleCount, samples);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
@@ -597,7 +648,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
     for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
-      rr.d = (samples[i] - x);
+      rr.d = samples[i];
 
       d = sList[j].p.intersect(rr);
 
@@ -636,15 +687,17 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   rr.o = x + n * eps;
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
+
   // returns 1/pdf.
-  double pdf = SphericalSampler::getPhongBRDFSamples(n, wo_ref, x, primitive->m.phongExp, sampleCount, samples);
+  double pdf = SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, primitive->m.phongExp, sampleCount, samples);
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     for (uint32_t i = 0; i < sampleCount; i++) {
       double d;
 
-      rr.d = (samples[i] - x);
+      rr.d = samples[i];
 
       d = sList[j].p.intersect(rr);
 
@@ -677,20 +730,20 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   Vec samples[100] = {0};
   double weight[100] = {0};
 
-  uint32_t nSamples = lightSampler->getSamples(x, n, r.d, primitive->m.phongExp, samples, weight);
-
   Vec sumLight = Vec();
   rr.o = x + n * eps;
 
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
 
+  uint32_t nSamples = lightSampler->getSamples(x, n, wo_ref, r.d * -1.0, primitive->m.phongExp, samples, weight);
+
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
     for (uint32_t i = 0; i < nSamples; i++) {
       double d;
 
-      rr.d = (samples[i] - x).norm();
+      rr.d = samples[i];
 
       d = sList[j].p.intersect(rr);
 

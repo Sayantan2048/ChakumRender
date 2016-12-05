@@ -7,7 +7,7 @@ class MIS {
   static const uint32_t nSoAnIS = 0; // No. of samples for solid angle importance sampling.
   static const uint32_t nSuArIS = 0; // No. of samples for surface area importance sampling.
   static const uint32_t nCoIS = 0; // Cosine weighted importance sampling.
-  static const uint32_t nPhBrIS = 5; // No. of phong brdf importance samples.
+  static const uint32_t nPhBrIS = 40; // No. of phong brdf importance samples.
 
   SphereSource *sList; // List of Sphere Sources
   uint32_t nSS; // No. of SphereSources
@@ -23,7 +23,7 @@ public:
     pList = _pList;
     nPS = nPointSource;
   }
-  uint32_t getSamples(Vec x, Vec n, Vec wo, double e, Vec *samples, double *weight);
+  uint32_t getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, double e, Vec *samples, double *weight);
 };
 extern MIS *lightSampler;
 extern void loadLightSampler();

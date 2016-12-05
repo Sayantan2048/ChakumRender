@@ -1,5 +1,6 @@
 #include "mathPrimitives.h"
 #include "materialTypes.h"
+#include "domainSampler.h"
 #include <cmath>
 #include <iostream>
 
@@ -41,6 +42,31 @@ double MaterialType::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi) {
 
   return 0.0;
 }
+
+void MaterialType::getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *samples, double *weights, uint32_t nSamples) {
+  uint32_t nBrdfSamples = nSamples * specularCoef;
+  double divideByZero = 1e-10;
+
+  if (b == CLASSIC_PHONG) {
+    SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, phongExp, nBrdfSamples, samples);
+    for (uint32_t i = 0; i < nBrdfSamples; i++)
+      weights[i] = 2 * PI / ((phongExp + 1)  * pow(samples[i].dot(wo_ref), phongExp) + divideByZero);
+  }
+  else if (b == GGX) {
+    SphericalSampler::getGGXDirectionSamples(n, wo, alpha, nBrdfSamples, samples);
+    for (uint32_t i = 0; i < nBrdfSamples; i++) {
+      Vec h = (wo + samples[i]).norm();
+      weights[i] = 4.0 * h.dot(wo) / (ggxDist(h, n) * h.dot(n) + divideByZero);
+    }
+  }
+  else
+    std::cerr<<"Undefined BRDF sampling!!\n";
+
+  double pdfInv = SphericalSampler::getCosineDirectionSamples(n, nSamples - nBrdfSamples, samples + nBrdfSamples);
+  for (uint32_t i = nBrdfSamples; i < nSamples - nBrdfSamples; i++)
+    weights[i] = pdfInv / (samples[i].dot(n) + divideByZero);
+}
+
 //See Microfacet BSDF paper, Bruce Walter
 double inline MaterialType::fresnel(double c) const {
   double g = intIOR/extIOR;

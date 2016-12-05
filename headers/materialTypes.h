@@ -1,5 +1,6 @@
 #if !defined(materialTypes_h__)
 #define materialTypes_h__
+#include <stdint.h>
 
 enum LightType {NONE = 0, POINT, VOLUME, PLANAR, MESH};
 enum BRDFType {BRDF_NONE = 0, CLASSIC_PHONG, GGX, BECKMANN, PHONG};
@@ -83,6 +84,7 @@ class MaterialType {
     }
 
     double brdf(Vec n, Vec wo_ref, Vec wo, Vec wi);
+    void getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *samples, double *weights, uint32_t nSamples);
   private:
     BRDFType b;
     // c = Dot product product between Half angle and wi or wo.

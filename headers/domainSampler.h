@@ -22,10 +22,11 @@ class SphericalSampler {
   static double getHemiSurfaceSamples(Vec n, Vec x, int nSamples, Vec *store);
   static double getHemiSurfaceSamplesTrue(Vec n, Vec x, int nSamples, Vec *store);
   static double getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store);
-  static double getSolidSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store);
-  static double getLightSurfaceSample(Vec c, double r, Vec x, int nSamples, Vec *store);
-  static double getCosineSurfaceSamples(Vec n, Vec x0, int nSamples, Vec *store);
-  static double getPhongBRDFSamples(Vec n, Vec w, Vec x0, double e, int nSamples, Vec *store);
+  static double getSolidDirectionSamples(Vec w, double theta_max, int nSamples, Vec *store);
+  static double getLightDirectionSamples(Vec c, double r, Vec x, int nSamples, Vec *store);
+  static double getCosineDirectionSamples(Vec n, int nSamples, Vec *store);
+  static double getClassicPhongDirectionSamples(Vec n, Vec w, double e, int nSamples, Vec *store);
+  static double getGGXDirectionSamples(Vec n, Vec wo, double alpha, int nSamples, Vec *store);
   static void getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, uint32_t nSamples, Vec *store);//Area of the domain is simply area of triangle.
   static void getDistribution(Vec n, Vec x, int nSamples, Vec *samples);
 };

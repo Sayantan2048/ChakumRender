@@ -16,7 +16,7 @@
 #include <cmath>
 #include <ctime>
 
-#define ANTIALIASING 50
+#define ANTIALIASING 10
 #define MOTIONBLUR   1
 
 double x_alias[] = {0.34, 0.86, 0.20, 0.86, 0.66, 0.34, 0.20, 0.66};
@@ -35,10 +35,10 @@ int main(int argc, char *argv[]) {
   configureLightSources();
   loadAccels();
   loadLightSampler();
-  Ray camera( Vec(50, 50, 275.0), Vec(0, -0.05, -1).norm());
-  Vec cx = Vec( w * 0.57735 / h, 0., 0.1); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
-  //Ray camera( Vec(50, 40, 275.0 * 2.0), Vec(0, 0, -1).norm());
-  //Vec cx = Vec( w * 0.57735 / h, 0., 0.0); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
+  //Ray camera( Vec(50, 50, 275.0), Vec(0, -0.05, -1).norm());
+  //Vec cx = Vec( w * 0.57735 / h, 0., 0.1); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
+  Ray camera( Vec(50, 40, 275.0 * 2.0), Vec(0, 0, -1).norm());
+  Vec cx = Vec( w * 0.57735 / h, 0., 0.0); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
   //Veach
   // camera location and direction of looking. Imagine right direction is x, up is y, and z is out of screen. Camera is mostly looking towards -z direction!!
   //Ray camera( Vec(50 * 0, 50 * 4, 275.0 * 2), Vec(0, -0.05 * 10, -1).norm());
