@@ -13,10 +13,10 @@ struct Pdf {
   double cosThetaMax; // Solid Angle Sampling
   Vec lightDir; // Solid Angle Sampling
   SphereSource *sS;
-  double e;
+  MaterialType *mPtr;
   Vec x;
   Vec n;
-  Vec wr;
+  Vec wo_ref;
   PdfType t;
   double N; // No. of samples in this pdf type
   double pdfVal(Vec sample) {
@@ -41,10 +41,13 @@ struct Pdf {
     else if (t == CoIS) {
       return sample.dot(n) * capAreaInv;
     }
-    else if (t == PhBrIS) {
+    else if (t == PhBrIS) {/*
       double cosine = sample.dot(wr);
       cosine = cosine > 0 ? cosine : 0;
       return capAreaInv * pow(cosine, e);
+      */
+      // x doubles as wo.
+      return mPtr->pdfEval(n, wo_ref, x, sample);
     }
     else {
       std::cerr<<"No Such PDF!!\n";
@@ -53,7 +56,7 @@ struct Pdf {
   }
 };
 
-uint32_t MIS::getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, double e, Vec *samples, double *weight) {
+uint32_t MIS::getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, BasePrimitive *bPtr, Vec *samples, double *weight) {
     std::vector<Pdf> pdf;
 
     uint32_t offset = 0;
@@ -97,11 +100,13 @@ uint32_t MIS::getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, double e, Vec *sample
 
     if (nPhBrIS > 0) {
       Pdf p;
-      SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, e, nPhBrIS, samples + offset);
-      p.capAreaInv = (e + 1.0)/(2 * PI);
-      p.wr = wo_ref;
-      p.x = x;
-      p.e = e;
+      bPtr->m.getBrdfDirectionSamples(n, wo_ref, wo, samples + offset, 0, nPhBrIS);
+      //SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, bPtr->m.phongExp, nPhBrIS, samples + offset);
+      //p.capAreaInv = (bPtr->m.phongExp + 1.0)/(2 * PI);
+      p.wo_ref = wo_ref;
+      p.n = n;
+      p.x = wo;
+      p.mPtr = &(bPtr->m);
       p.t = PhBrIS;
       p.N = nPhBrIS;
       pdf.push_back(p);
@@ -134,7 +139,7 @@ uint32_t MIS::getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, double e, Vec *sample
       for (uint32_t pdfIter = 0; pdfIter < pdf.size(); pdfIter++) {
 	  denom += pdf[pdfIter].N * pdf[pdfIter].pdfVal(sample);
       }
-      weight[i] = 1.0/denom;
+      weight[i] = 1.0/(denom + 1e-20);
     }
 
     return nSamples;

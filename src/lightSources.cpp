@@ -13,7 +13,7 @@
 #include "ppm.h"
 
 #define MAX_SP_SAMPLES 		(1000) // Should be less than the No. of samples in domainSampler.h
-#define SP_SAMPLING_TYPE	16// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+#define SP_SAMPLING_TYPE	32// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
 //16 for phong BRDF sampling(works only if all objects are pure phong!!).
 #define MAX_ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
 #define ENV_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Importance sampling.
@@ -689,7 +689,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
 
-  uint32_t nSamples = lightSampler->getSamples(x, n, wo_ref, r.d * -1.0, primitive->m.phongExp, samples, weight);
+  uint32_t nSamples = lightSampler->getSamples(x, n, wo_ref, r.d * -1.0, primitive, samples, weight);
 
   for (uint32_t j = 0; j < sList.size(); j++) {
     double sum = 0;
