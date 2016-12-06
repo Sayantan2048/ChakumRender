@@ -51,7 +51,8 @@ double MaterialType::pdfEval(Vec n, Vec wo_ref, Vec wo, Vec wi) {
   double spec = specularCoef;
 
   if (b == CLASSIC_PHONG) {
-      spec *= ((phongExp + 1)  * pow(wi.dot(wo_ref), phongExp)) / (2 * PI);
+      double cosine = wi.dot(wo_ref);
+      spec *= ((phongExp + 1)  * pow(cosine > 0?cosine:0, phongExp)) / (2 * PI);
   }
   else if (b == GGX || b == BECKMANN || b == PHONG) {
       Vec h = (wo + wi).norm();
