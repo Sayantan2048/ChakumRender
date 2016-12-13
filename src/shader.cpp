@@ -99,8 +99,8 @@ double shadow(const Ray &shadowRay, double distanceLightSource) {
 // directIllumination shading
 inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list) {
   Vec light = lSource->getLightFromPointSources(r, N, x, list) +
-	lSource->getLightFromSphereSources(r, N, x, list, 100) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
-	+ lSource->getLightFromTriSources(r, N, x, list, 100) + lSource->getLightFromMeshSources(r, N, x, list, 100);
+	lSource->getLightFromSphereSources(r, N, x, list, 1) + lSource->getLightFromEnvSource(r, N, x, list, 1000)
+	+ lSource->getLightFromTriSources(r, N, x, list, 100) + lSource->getLightFromMeshSources(r, N, x, list, 160);
   //Vec light = lSource->getLightFromMeshSource_CVNoShadow(r, N, x, list, 1);
   return list->c.mult(light); // Compute color of intersection.
 }
@@ -159,6 +159,8 @@ Vec shadeExplicit(const Ray &r) {
 
     do {
       rayStatus = 1;
+      //ptr->m.getBrdfDirectionSampleRandomized(n, wo_ref, ri.d * -1.0, sample[0], pdf, random);
+      //secondaryRay.d = sample[0];
       pdf = SphericalSampler::getHemiDirectionSamples(n, 1, sample);
       secondaryRay.d = sample[0];
 
@@ -310,17 +312,14 @@ Vec shadeImplicit(const Ray &r) {
 	secondaryRay.o = x + n * 1e-6;
 	Vec sample[1];
 	double pdfInv = 1;
-	double e = random.randomMTD(0, 1);
 	double cosine = 1;
-	// avoid devide by zero with addition of extra term 0.000001
-	if (e > ptr->m.specularCoef) {
+	if (1) {
 	  pdfInv = SphericalSampler::getCosineDirectionSamples(n, 1, sample);
 	  secondaryRay.d = sample[0];
 	}
 	else {
-	  SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, ptr->m.phongExp, 1, sample);
+	  ptr->m.getBrdfDirectionSampleRandomized(n, wo_ref, ri.d * -1.0, sample[0], pdfInv, random);
 	  secondaryRay.d = sample[0];
-	  pdfInv =  (2 * PI) / ((ptr->m.phongExp + 1.0) * (pow(secondaryRay.d.dot(wo_ref), ptr->m.phongExp) + 0.000001));
 	  cosine = secondaryRay.d.dot(n);
 	}
 
@@ -366,7 +365,7 @@ Vec shade(const Ray &r, int &depth) {
   return shadeImplicit(r);
 #endif
 
-#if 0
+#if 1
   return shadeExplicit(r);
 #endif
 

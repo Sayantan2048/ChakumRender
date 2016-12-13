@@ -1,9 +1,10 @@
 #if !defined(materialTypes_h__)
 #define materialTypes_h__
 #include <stdint.h>
+#include "random.h"
 
 enum LightType {NONE = 0, POINT, VOLUME, PLANAR, MESH};
-enum BRDFType {BRDF_NONE = 0, CLASSIC_PHONG, GGX, BECKMANN, PHONG};
+enum BRDFType {BRDF_NONE = 0, CLASSIC_PHONG, GGX, BECKMANN, PHONG, GGXAPPROX};
 class MaterialType {
   public:
     double phongExp; //Classical phong BRDF exponent
@@ -85,6 +86,7 @@ class MaterialType {
 
     double brdf(Vec n, Vec wo_ref, Vec wo, Vec wi);
     void getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *samples, double *weights, uint32_t nSamples);
+    void getBrdfDirectionSampleRandomized(const Vec &n, const Vec &wo_ref, const Vec &wo, Vec &sample, double &weight, Random &r);
     double pdfEval(Vec n, Vec wo_ref, Vec wo, Vec wi);
   private:
     BRDFType b;
@@ -98,6 +100,9 @@ class MaterialType {
     double beckmannG1(const Vec &v, const Vec &h, const Vec &n) const;
 
     double phongG1(const Vec &v, const Vec &h, const Vec &n) const;
+
+    //Linearly transformed cosine
+    double approxLTC_BRDF(const Vec &n, const Vec &wi, const mat3 &M, const mat3 &Minv, const double amplitude) const;
 };
 
 #endif

@@ -13,8 +13,8 @@
 #include "ppm.h"
 
 #define MAX_SP_SAMPLES 		(1000) // Should be less than the No. of samples in domainSampler.h
-#define SP_SAMPLING_TYPE	32// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
-//16 for phong BRDF sampling(works only if all objects are pure phong!!).
+#define SP_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Solid Angle Importance Sampling, 4 Light Surface Sampling, 8 cosine weighted sampling.
+//16 for BRDF sampling //32 is MIS.
 #define MAX_ENV_SAMPLES		1000 // Should be less than the No. of samples in domainSampler.h and nSamples in struct EnvSource
 #define ENV_SAMPLING_TYPE	2// 1 for Uniform hemispherical sampling, 2 Importance sampling.
 
@@ -49,7 +49,7 @@ void configureLightSources() {
   //lSource->addPSource(PointSource(Vec(50, 40.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)));
   //lSource->addSSource(SphereSource(Vec(10.0, 0.0, 0.0), Sphere(10, Vec(20, 40.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(5.0, 0.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
-  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(50, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(80, Vec(50, 100, -400), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //Veach Scene
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
@@ -67,15 +67,15 @@ void configureLightSources() {
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
 
-  /*MeshLight mesh1;
+  MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(130, 200, -800), Vec(-30, 200, -800), Vec(-30, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   mesh1.add(TriLight(
     Triangle(Vec(130, 200, -800), Vec(-30, 40, -800), Vec(130, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);*/
-
+  lSource->addMSource(mesh1);
+/*
  MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(30, 68, 60), Vec(30, 68, 100), Vec(70, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
@@ -83,7 +83,7 @@ void configureLightSources() {
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 68, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 0, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);
+  lSource->addMSource(mesh1);*/
 /*
   MeshLight mesh2;
   Vec A = Vec(30, 68, 60);
@@ -122,12 +122,12 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
   double eps = 1e-08;
   double brdf = 0;
   Vec samples[sampleCount] = {0};
-
+  double weights[sampleCount] = {0};
   Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
   wo_ref.norm();
 
-  // returns 1/pdf.
-  double pdf = SphericalSampler::getHemiDirectionSamples(n, sampleCount, samples);
+  // Sample BRDF direction
+  primitive->m.getBrdfDirectionSamples(n, wo_ref, r.d * -1.0, samples, weights, sampleCount);
   Vec sumLight = Vec();
   rr.o = x + n * eps;
   Vec dummy;
@@ -153,9 +153,9 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
 
       brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, x);
 
-      sum = sum + mList[j].mesh[id].radiance * (cosine * brdf);
+      sum = sum + mList[j].mesh[id].radiance * (cosine * brdf * weights[i]);
     }
-    sumLight = sumLight + sum * ( pdf / sampleCount);
+    sumLight = sumLight + sum / sampleCount;
   }
   return sumLight;
 }
