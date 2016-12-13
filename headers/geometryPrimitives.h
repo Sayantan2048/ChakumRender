@@ -31,7 +31,7 @@ public:
   // Axis Aligned bounding box.
   AABBox box;
   // brdf
-  double brdf(Vec n, Vec wo_ref, Vec wo, Vec wi, Vec x);
+  double brdf(const Vec &n, const Vec &wo_ref, const Vec &wo, const Vec &wi, const BRDFApprox &brdfApprox = BRDFApprox()) const;
   BasePrimitive(Vec c_, double r_, MaterialType m_, AABBox b): c(c_), reflectance(r_), m(m_), box(b) {}
 };
 

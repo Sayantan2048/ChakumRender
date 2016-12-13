@@ -186,7 +186,7 @@ Vec shadeExplicit(const Ray &r) {
 	break;
      }
      double cosine = secondaryRay.d.dot(n);
-     double brdf = ptr->brdf(n, wo_ref, ri.d * -1.0, secondaryRay.d, x);
+     double brdf = ptr->brdf(n, wo_ref, ri.d * -1.0, secondaryRay.d);
      double product = (pdf * cosine * brdf);
      TP.push_back(ptr->c*product);
 
@@ -259,7 +259,7 @@ Vec shadeExplicitFirstBounce(const Ray &r) {
 	continue; // Hits a light source
 
     double cosine = secondaryRay.d.dot(n);
-    double brdf = ptr->brdf(n, wo_ref, r.d * -1.0, secondaryRay.d, x);
+    double brdf = ptr->brdf(n, wo_ref, r.d * -1.0, secondaryRay.d);
     double product = (pdfInv * cosine * brdf);
 
     indirectIllumination = indirectIllumination + shadeExplicit(secondaryRay).mult((ptr->c * product));
@@ -323,7 +323,7 @@ Vec shadeImplicit(const Ray &r) {
 	  cosine = secondaryRay.d.dot(n);
 	}
 
-	double brdf = ptr->brdf(n, wo_ref, ri.d * -1.0, secondaryRay.d, x);
+	double brdf = ptr->brdf(n, wo_ref, ri.d * -1.0, secondaryRay.d);
 	product = product * (pdfInv * cosine * brdf);
 	product = ptr->c.mult(product);
 	ri = secondaryRay;

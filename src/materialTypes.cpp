@@ -6,8 +6,10 @@
 #include <iostream>
 
 // Assumes wo.dot(n) and wi.dot(n) are positive
-double MaterialType::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi) {
-  if (b == CLASSIC_PHONG) {
+double MaterialType::brdf(const Vec &n, const Vec &wo_ref, const Vec &wo, const Vec &wi, const BRDFApprox &brdfApprox) const {
+  if (brdfApprox.isSet)
+    return specularCoef * approxLTC_BRDF(n, wi, brdfApprox.M, brdfApprox.Minv, brdfApprox.amplitude) / n.dot(wi) + (1 - specularCoef) / PI;
+  else if (b == CLASSIC_PHONG) {
     double cosine = wo_ref.dot(wi);
     //cosine > 0?cosine:0
     return (specularCoef * (phongExp + 1) * pow (cosine > 0?cosine:0, phongExp) / (2 * PI)) + (1 - specularCoef) / PI;
@@ -39,31 +41,36 @@ double MaterialType::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi) {
 
       return (specularCoef * F * D * G) / (4.0 * wi.dot(n) * wo.dot(n)) + (1 - specularCoef) / PI;
   }
-  else if (b == GGXAPPROX) {
-      mat3 M, Minv;
-      double amplitude;
-
-      M_GGX(acos(n.dot(wo)), alpha, M, Minv, amplitude);
-      Vec T1, T2;
-
-      // At the time of fitting, observed direction is restricted to xz plane. i.e phi = 0
-      // So create a rotaion matrix to convert canonical coordinate into new basis such that xz plane in new basis also contains the observed direction.
-      T1 = wo - n * (n.dot(wo));
-      T1.norm();
-      T2 = n%T1;
-      T2.norm();
-
-      // Invert the rotaion matrix. Use Rinv = Rtranspose
-      mat3 rotateInv(mat3(T1, T2, n).transpose());
-
-      // y = (RM) x or x = (Minv Rinv) y.
-      mat3 newMInv(Minv.mul(rotateInv));
-      return specularCoef * approxLTC_BRDF(n, wi, M, newMInv, amplitude) / n.dot(wi) + (1 - specularCoef) / PI;
-  }
+  else if (b == GGXAPPROX)
+    std::cerr<<"Approx BRDF Parameters are not set\n";
   else
     std::cerr<<"Undefined BRDF!!\n";
 
   return 0.0;
+}
+
+void MaterialType::getBrdfApproxParam(const Vec &n, const Vec &wo, BRDFApprox &brdfApprox, const bool force) const {
+  if (b == GGXAPPROX || (b == GGX && force)) {
+    M_GGX(acos(n.dot(wo)), alpha, brdfApprox.M, brdfApprox.Minv, brdfApprox.amplitude);
+    Vec T1, T2;
+
+    // At the time of fitting, observed direction is restricted to xz plane. i.e phi = 0
+    // So create a rotaion matrix to convert canonical coordinate into new basis such that xz plane in new basis also contains the observed direction.
+    T1 = wo - n * (n.dot(wo));
+    T1.norm();
+    T2 = n%T1;
+    T2.norm();
+
+    // Invert the rotaion matrix. Use Rinv = Rtranspose
+    mat3 rotateInv(mat3(T1, T2, n).transpose());
+
+    // y = (RM) x or x = (Minv Rinv) y.
+    brdfApprox.Minv = brdfApprox.Minv.mul(rotateInv);
+
+    brdfApprox.isSet = true;
+  }
+  else
+    brdfApprox.isSet = false;
 }
 
 double MaterialType::approxLTC_BRDF(const Vec &n, const Vec &wi, const mat3 &M, const mat3 &Minv, const double amplitude) const {
@@ -79,7 +86,7 @@ double MaterialType::approxLTC_BRDF(const Vec &n, const Vec &wi, const mat3 &M, 
   return res;
 }
 
-double MaterialType::pdfEval(Vec n, Vec wo_ref, Vec wo, Vec wi) {
+double MaterialType::pdfEval(const Vec &n, const Vec &wo_ref, const Vec &wo, const Vec &wi) const {
 
   // Assumes Cosine weighted sampling
   double diffuse = (1.0 - specularCoef) * wi.dot(n) / PI;
@@ -108,7 +115,7 @@ double MaterialType::pdfEval(Vec n, Vec wo_ref, Vec wo, Vec wi) {
 
 }
 
-void MaterialType::getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *samples, double *weights, uint32_t nSamples) {
+void MaterialType::getBrdfDirectionSamples(const Vec &n, const Vec &wo_ref, const Vec &wo, Vec *samples, double *weights, const uint32_t nSamples) const {
   uint32_t nBrdfSamples = nSamples * specularCoef;
   const static double divideByZero = 1e-10;
 
@@ -126,7 +133,7 @@ void MaterialType::getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *sampl
     weights[i] = 1.0 / (pdfEval(n, wo_ref, wo, samples[i]) + divideByZero);
 }
 
-void MaterialType::getBrdfDirectionSampleRandomized(const Vec &n, const Vec &wo_ref, const Vec &wo, Vec &sample, double &weight, Random &r) {
+void MaterialType::getBrdfDirectionSampleRandomized(const Vec &n, const Vec &wo_ref, const Vec &wo, Vec &sample, double &weight, Random &r) const {
   const static double divideByZero = 1e-10;
 
   if (r.randomMTD(0, 1) < specularCoef) {

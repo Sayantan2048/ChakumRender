@@ -77,8 +77,8 @@ void loadObjects() {
   //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(400.0, 1)));
   //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(400.0, 1)));
 
-  vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(0.15, 10000, 1, 1, GGXAPPROX)));
-  vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(0.15, 10000, 1, 1, GGXAPPROX)));
+  vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(0.15, 10000, 1, 1, GGX)));
+  vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(0.15, 10000, 1, 1, GGX)));
   /*  objLoader *objData = new objLoader();
   objData->load("Aventador1.obj");
 

@@ -5,6 +5,18 @@
 
 enum LightType {NONE = 0, POINT, VOLUME, PLANAR, MESH};
 enum BRDFType {BRDF_NONE = 0, CLASSIC_PHONG, GGX, BECKMANN, PHONG, GGXAPPROX};
+
+struct BRDFApprox {
+  mat3 M;
+  mat3 Minv;
+  double amplitude;
+  bool isSet;
+  BRDFApprox() {
+    isSet = false;
+    amplitude = 0;
+  }
+};
+
 class MaterialType {
   public:
     double phongExp; //Classical phong BRDF exponent
@@ -84,10 +96,11 @@ class MaterialType {
       b = bt;
     }
 
-    double brdf(Vec n, Vec wo_ref, Vec wo, Vec wi);
-    void getBrdfDirectionSamples(Vec n, Vec wo_ref, Vec wo, Vec *samples, double *weights, uint32_t nSamples);
-    void getBrdfDirectionSampleRandomized(const Vec &n, const Vec &wo_ref, const Vec &wo, Vec &sample, double &weight, Random &r);
-    double pdfEval(Vec n, Vec wo_ref, Vec wo, Vec wi);
+    double brdf(const Vec &n, const Vec &wo_ref, const Vec &wo, const Vec &wi, const BRDFApprox &brdfApprox) const;
+    void getBrdfDirectionSamples(const Vec &n, const Vec &wo_ref, const Vec &wo, Vec *samples, double *weights, const uint32_t nSamples) const;
+    void getBrdfDirectionSampleRandomized(const Vec &n, const Vec &wo_ref, const Vec &wo, Vec &sample, double &weight, Random &r) const;
+    double pdfEval(const Vec &n, const Vec &wo_ref, const Vec &wo, const Vec &wi) const;
+    void getBrdfApproxParam(const Vec &n, const Vec &wo, BRDFApprox &brdfApprox, const bool force = false) const;
   private:
     BRDFType b;
     // c = Dot product product between Half angle and wi or wo.

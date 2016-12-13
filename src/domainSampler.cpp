@@ -138,11 +138,15 @@ void SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, c
 }
 
 // Cosine weighted surface sampling.
-double SphericalSampler::getCosineDirectionSamples(Vec n, int nSamples, Vec *store) {
+// Assumes normalized n.
+double SphericalSampler::getCosineDirectionSamples(const Vec &n, const int nSamples, Vec *store) {
+    if (isNotClose(n.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!");
+
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES); // We'll use one sample on every iteration.
 
-    n.norm(); // Z - axis is transfomed to this axis.
+    //Z - axis is transfomed to normal direction.
 
     Vec newX; // X - axis transfomed to this axis.
     // Let's find a Vector perpendicular to n.
@@ -173,12 +177,17 @@ double SphericalSampler::getCosineDirectionSamples(Vec n, int nSamples, Vec *sto
 }
 
 // GGX, BECKMANN, PHONG sampling.
-double SphericalSampler::getBrdfDirectionSamples(Vec n, Vec wo, double alpha, int nSamples, Vec *store, BRDFType b) {
+// Assumes normalized n, wo
+double SphericalSampler::getBrdfDirectionSamples(const Vec &n, const Vec &wo, const double alpha, const int nSamples, Vec *store, const BRDFType b) {
+    if (isNotClose(n.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!\n");
+    if (isNotClose(wo.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!\n");
+
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
 
-    n.norm(); // Z - axis is transfomed to this axis.
-    wo.norm();
+    //Z - axis is transfomed to normal direction.
 
     Vec newX; // X - axis transfomed to this axis.
     // Let's find a Vector perpendicular to n.
@@ -239,11 +248,17 @@ double SphericalSampler::getBrdfDirectionSamples(Vec n, Vec wo, double alpha, in
 }
 
 // Get phong cosine lobe around w, with exponent e.
-double SphericalSampler::getClassicPhongDirectionSamples(Vec n, Vec w, double e, int nSamples, Vec *store) {
+// Assumes normalized n, w
+double SphericalSampler::getClassicPhongDirectionSamples(const Vec &n, const Vec &w, const double e, const int nSamples, Vec *store) {
+    if (isNotClose(n.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!");
+    if (isNotClose(w.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!");
+
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
-    n.norm();
-    w.norm(); // Z - axis is transfomed to this axis.
+
+    // Z - axis is transfomed to w.
 
     Vec newX; // X - axis transfomed to this axis.
     // Let's find a Vector perpendicular to w.

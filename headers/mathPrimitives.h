@@ -6,6 +6,7 @@
 
 #define maX(a, b) ((a) > (b) ? (a) : (b))
 #define miN(a, b) ((a) < (b) ? (a) : (b))
+#define isNotClose(a, b, eps) (fabs(a - b) > eps)
 
 struct Vec {
   double x, y, z;
