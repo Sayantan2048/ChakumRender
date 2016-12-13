@@ -27,7 +27,7 @@ mathPrimitives.o: mathPrimitives.h mathPrimitives.cpp
 domainSampler.o: domainSampler.cpp domainSampler.h
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/domainSampler.cpp -o $(OBJ)/domainSampler.o
 
-materialTypes.o: materialTypes.cpp materialTypes.h
+materialTypes.o: materialTypes.cpp materialTypes.h ltc.h
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/materialTypes.cpp -o $(OBJ)/materialTypes.o
 
 geometryPrimitives.o: geometryPrimitives.cpp geometryPrimitives.h

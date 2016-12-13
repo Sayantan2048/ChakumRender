@@ -43,16 +43,22 @@ double MaterialType::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi) {
       mat3 M, Minv;
       double amplitude;
 
-      M_GGX2(acos(n.dot(wo)), alpha, M, Minv, amplitude);
+      M_GGX(acos(n.dot(wo)), alpha, M, Minv, amplitude);
       Vec T1, T2;
+
+      // At the time of fitting, observed direction is restricted to xz plane. i.e phi = 0
+      // So create a rotaion matrix to convert canonical coordinate into new basis such that xz plane in new basis also contains the observed direction.
       T1 = wo - n * (n.dot(wo));
       T1.norm();
       T2 = n%T1;
       T2.norm();
-      mat3 rotate(mat3(T1, T2, n).transpose());
-      mat3 newM(rotate.mul(M));
-      mat3 newMInv(Minv.mul(rotate));
-      return specularCoef * approxLTC_BRDF(n, wi, newM, newMInv, amplitude) / n.dot(wi) + (1 - specularCoef) / PI;
+
+      // Invert the rotaion matrix. Use Rinv = Rtranspose
+      mat3 rotateInv(mat3(T1, T2, n).transpose());
+
+      // y = (RM) x or x = (Minv Rinv) y.
+      mat3 newMInv(Minv.mul(rotateInv));
+      return specularCoef * approxLTC_BRDF(n, wi, M, newMInv, amplitude) / n.dot(wi) + (1 - specularCoef) / PI;
   }
   else
     std::cerr<<"Undefined BRDF!!\n";
@@ -61,18 +67,9 @@ double MaterialType::brdf(Vec n, Vec wo_ref, Vec wo, Vec wi) {
 }
 
 double MaterialType::approxLTC_BRDF(const Vec &n, const Vec &wi, const mat3 &M, const mat3 &Minv, const double amplitude) const {
-   //double cos_theta_wi = wi.dot(n);
-  //Vec L(sqrt(1 - cos_theta_wi * cos_theta_wi), 0, cos_theta_wi);
-  //L.show();
-  //std::cout<<"\n";
-  Vec Loriginal = Minv.mul(wi);
-  //L.show();
-  //std::cout<<" ";
-
+  Vec Loriginal = Minv.mul(wi); // Get incident direction in canonical uniform cosine distribution
   Loriginal.norm();
-  //Loriginal.show();
-  //std::cout<<"\n";
-  Vec L_ = M.mul(Loriginal);
+  Vec L_ = M.mul(Loriginal); // Get incident direction in canonical BRDF distribution
 
   double l = L_.length();
   double Jacobian = M.det / (l*l*l);
@@ -81,50 +78,6 @@ double MaterialType::approxLTC_BRDF(const Vec &n, const Vec &wi, const mat3 &M, 
   double res = amplitude * D / Jacobian;
   return res;
 }
-/*
-double MaterialType::approxLTC_BRDF(const Vec &n, const Vec &wi, const mat3 &M, const mat3 &Minv, const double amplitude) const {
-  Vec newX; // X - axis transfomed to this axis.
-  // Let's find a Vector perpendicular to n.
-  if (n.x != 0)
-    newX = Vec((-n.y-n.z)/n.x, 1.0, 1.0);
-  else if (n.y != 0)
-    newX = Vec(1.0,  -n.z/n.y, 0.0); // since n.x is zero, we can simplify 2nd dimension
-  else if (n.z != 0)
-    newX = Vec(1.0, 1.0, 0); // Since both n.x and n.y are zero.
-  else
-    std::cerr<<"WTF is n??\n";
-
-  newX.norm();
-  //n.show();
- // std::cout<<"\n";
-  Vec newY = (n%newX).norm() * -1.0;
-
-  //Vec L(mat3(newX, newY, n).inv().mul(wi));
-  //L.norm();
-  mat3 rotate(Vec(1, 0, 0), Vec(0, 0, 1.0), Vec(0, 1, 0));
-  Vec L(rotate.inv().mul(wi));
-  L.norm();
-
-  //double cos_theta_wi = wi.dot(n);
-  //Vec L(sqrt(1 - cos_theta_wi * cos_theta_wi), 0, cos_theta_wi);
-  //L.show();
-  //std::cout<<"\n";
-  Vec Loriginal = Minv.mul(L);
-  //L.show();
-  //std::cout<<" ";
-
-  Loriginal.norm();
-  //Loriginal.show();
-  //std::cout<<"\n";
-  Vec L_ = M.mul(Loriginal);
-
-  double l = L_.length();
-  double Jacobian = M.det / (l*l*l);
-  double D = 1.0 / PI * maX(0.0, Loriginal.z);
-
-  double res = amplitude * D / Jacobian;
-  return res;
-}*/
 
 double MaterialType::pdfEval(Vec n, Vec wo_ref, Vec wo, Vec wi) {
 

@@ -29,8 +29,8 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 inline int toDisplayValue(double x){ return int( pow( clamp(x), 1.0/2.2 ) * 255 + .5); }
 
 int main(int argc, char *argv[]) {
-  //int w = 512, h = 384;
-  int w = 600, h = 700;
+  int w = 512, h = 384;
+  //int w = 600, h = 700;
   loadObjects();
   configureLightSources();
   loadAccels();
