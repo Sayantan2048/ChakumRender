@@ -133,8 +133,15 @@ class LightSource {
   std::vector<MeshLight> mList;
   static const double eps = 0.01;
 
-  Vec getLightFromMeshSourceAdv(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, uint32_t &confidence);
-  Vec getLightFromMeshSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  double integrateEdge(const Vec &v1, const Vec &v2, const Vec &n);
+  double integrateEdge(const Vec &v1, const Vec &v2); // Simplified for n = Vec(0, 0, 1)
+  bool clipTriangle(const Vec &A, const Vec &B,  const Vec &C, const Vec &n, const Vec &P, const double nA, const double nB, const double nC, Vec *clip);
+  bool clipTriangle(const Vec &A, const Vec &B,  const Vec &C, const double nA, const double nB, const double nC, Vec *clip); //Simplified for n = Vec(0, 0, 1) and P = Vec(0, 0, 0)
+  Vec getLightAnalyticDiffuse(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightAnalytic(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const BRDFApprox &brdfApprox);
+
+  //Experimental
+  Vec getLightAnalyticDiffuseAdv(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, uint32_t &confidence);
 public:
   LightSource() {
     sList.reserve(5);
@@ -181,8 +188,11 @@ public:
   Vec getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
   Vec getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
   Vec getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
-  Vec getLightFromMeshSource_CVShadow(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
-  Vec getLightFromMeshSource_CVNoShadow(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromMeshSource_AnalyticCV(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromMeshSource_Analytic(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+
+  //Experimental
+  Vec getLightFromMeshSource_CVAdv(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
 };
 
 extern LightSource *lSource;

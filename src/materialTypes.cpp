@@ -80,7 +80,7 @@ double MaterialType::approxLTC_BRDF(const Vec &n, const Vec &wi, const mat3 &M, 
 
   double l = L_.length();
   double Jacobian = M.det / (l*l*l);
-  double D = 1.0 / PI * maX(0.0, Loriginal.z);
+  double D = 1.0 / PI * maX(0, Loriginal.z); //fabs(Loriginal.z);
 
   double res = amplitude * D / Jacobian;
   return res;

@@ -22,7 +22,7 @@
 #define TRI_SAMPLING_TYPE	2
 
 #define MAX_MESH_SAMPLES	1000 // Should be less than the No. of samples in domainSampler.h
-#define MESH_SAMPLING_TYPE	1
+#define MESH_SAMPLING_TYPE	2
 static double to_greyScale(Vec L);
 LightSource *lSource;
 /*
@@ -66,7 +66,7 @@ void configureLightSources() {
   lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
-
+/*
   MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(130, 200, -800), Vec(-30, 200, -800), Vec(-30, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
@@ -74,8 +74,8 @@ void configureLightSources() {
     Triangle(Vec(130, 200, -800), Vec(-30, 40, -800), Vec(130, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);
-/*
+  lSource->addMSource(mesh1);*/
+
  MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(30, 68, 60), Vec(30, 68, 100), Vec(70, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
@@ -83,7 +83,7 @@ void configureLightSources() {
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 68, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 0, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);*/
+  lSource->addMSource(mesh1);
 /*
   MeshLight mesh2;
   Vec A = Vec(30, 68, 60);
