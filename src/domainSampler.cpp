@@ -51,7 +51,7 @@ int SphericalSampler::initSamples() {
     return 0;
 }
 
-double SphericalSampler::getSphericalVolumeSamples(Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getSphericalVolumeSamples(const Vec &x, const int nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
@@ -61,7 +61,7 @@ double SphericalSampler::getSphericalVolumeSamples(Vec x, int nSamples, Vec *sto
     return 4.0 * PI /3.0;
 }
 
-double SphericalSampler::getSphericalSurfaceSamples(Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getSphericalSurfaceSamples(const Vec &x, const int nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
@@ -71,7 +71,11 @@ double SphericalSampler::getSphericalSurfaceSamples(Vec x, int nSamples, Vec *st
     return 4 * PI;
 }
 
-double SphericalSampler::getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store) {
+// Assumes normalized n
+double SphericalSampler::getHemiVolumeSamples(const Vec &n, const Vec &x, const int nSamples, Vec *store) {
+    if (isNotClose(n.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!");
+
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
@@ -81,7 +85,11 @@ double SphericalSampler::getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *s
     return 2.0 * PI / 3.0;
 }
 
-double SphericalSampler::getHemiDirectionSamples(Vec n, int nSamples, Vec *store) {
+// Assumes normalized n
+double SphericalSampler::getHemiDirectionSamples(const Vec &n, const int nSamples, Vec *store) {
+    if (isNotClose(n.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!");
+
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     // 0xFFFFFFF0 gives better alignment and performance!!
@@ -91,7 +99,11 @@ double SphericalSampler::getHemiDirectionSamples(Vec n, int nSamples, Vec *store
     return 2.0 * PI;
 }
 
-double SphericalSampler::getHemiDirectionSamplesTrue(Vec n, int nSamples, Vec *store) {
+// Assumes normalized n
+double SphericalSampler::getHemiDirectionSamplesTrue(const Vec &n, const int nSamples, Vec *store) {
+    if (isNotClose(n.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!");
+
     Random random(clock() & 0xFFFFFFFF);
 
     double sx, sy, sz;
@@ -112,7 +124,7 @@ double SphericalSampler::getHemiDirectionSamplesTrue(Vec n, int nSamples, Vec *s
 }
 
 // Importance sampling as per visible surface of light from a point x.
-double SphericalSampler::getLightDirectionSamples(Vec c, double r, Vec x, int nSamples, Vec *store) {
+double SphericalSampler::getLightDirectionSamples(const Vec &c, const double r, const Vec &x, const int nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
     int offset = random.randomMTD(0, (MULTIPLIER - 1) * nSAMPLES);
     Vec dir = (x - c).norm();
@@ -123,7 +135,7 @@ double SphericalSampler::getLightDirectionSamples(Vec c, double r, Vec x, int nS
     return 2 * PI * r * r;
 }
 
-void SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, uint32_t nSamples, Vec *store) {
+void SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, const uint32_t nSamples, Vec *store) {
     Random random(clock() & 0xFFFFFFFF);
     uint32_t offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
 
@@ -140,7 +152,7 @@ void SphericalSampler::getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, c
 // Cosine weighted surface sampling.
 // Assumes normalized n.
 double SphericalSampler::getCosineDirectionSamples(const Vec &n, const int nSamples, Vec *store) {
-    if (isNotClose(n.length(), 1, 1e-10))
+    if (isNotClose(n.length(), 1, 1e-10)) // Remove this to caller function
       fprintf (stderr, "Direction is not normalized!!");
 
     Random random(clock() & 0xFFFFFFFF);
@@ -179,7 +191,7 @@ double SphericalSampler::getCosineDirectionSamples(const Vec &n, const int nSamp
 // GGX, BECKMANN, PHONG sampling.
 // Assumes normalized n, wo
 double SphericalSampler::getBrdfDirectionSamples(const Vec &n, const Vec &wo, const double alpha, const int nSamples, Vec *store, const BRDFType b) {
-    if (isNotClose(n.length(), 1, 1e-10))
+    if (isNotClose(n.length(), 1, 1e-10)) // Remove this to caller function
       fprintf (stderr, "Direction is not normalized!!\n");
     if (isNotClose(wo.length(), 1, 1e-10))
       fprintf (stderr, "Direction is not normalized!!\n");
@@ -250,7 +262,7 @@ double SphericalSampler::getBrdfDirectionSamples(const Vec &n, const Vec &wo, co
 // Get phong cosine lobe around w, with exponent e.
 // Assumes normalized n, w
 double SphericalSampler::getClassicPhongDirectionSamples(const Vec &n, const Vec &w, const double e, const int nSamples, Vec *store) {
-    if (isNotClose(n.length(), 1, 1e-10))
+    if (isNotClose(n.length(), 1, 1e-10)) // Remove this to caller function
       fprintf (stderr, "Direction is not normalized!!");
     if (isNotClose(w.length(), 1, 1e-10))
       fprintf (stderr, "Direction is not normalized!!");
@@ -301,18 +313,21 @@ double SphericalSampler::getClassicPhongDirectionSamples(const Vec &n, const Vec
     return 1; // For normalized phong.
 }
 
-#define DEBUG_ARCSS 0
 //Solid angle imortance sampling!!
 //Sample around w as axis, centered at x with sample points making maximum angle of theta_max with w.
 // This implementation is slower but numerically more stable.
-double SphericalSampler::getSolidDirectionSamples(Vec w, double theta_max, int nSamples, Vec *store) {
+// Assume normalized w
+double SphericalSampler::getSolidDirectionSamples(const Vec &w, const double theta_max, const int nSamples, Vec *store) {
+  if (isNotClose(w.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!");
+
   // calculate area of cap using cap-hat theorem
   double A = 2.0 * PI * (1 - cos(theta_max));
 
   Random random(clock() & 0xFFFFFFFF);
   int offset = random.randomMTD(0, (MULTIPLIER - 2) * nSAMPLES); // We'll use two random number on every iteration.
 
-  w.norm(); // Z - axis is transfomed to this axis.
+  // Z - axis is transfomed to w axis.
 
   Vec newX; // X - axis transfomed to this axis.
   // Let's find a Vector perpendicular to w.
@@ -354,11 +369,14 @@ double SphericalSampler::getSolidDirectionSamples(Vec w, double theta_max, int n
 }
 
 // This implementation is slightly faster but less numerically satble. You will see artifacts when size of light source gets smaller.
-/*double SphericalSampler::getSolidSurfaceSamples(Vec w, Vec x, double theta_max, int nSamples, Vec *store) {
+//#define DEBUG_ARCSS 0
+/*double SphericalSampler::getSolidSurfaceSamples(const Vec &w, Vec x, double theta_max, int nSamples, Vec *store) {
+  if (isNotClose(w.length(), 1, 1e-10))
+      fprintf (stderr, "Direction is not normalized!!");
+
   Random random(clock() & 0xFFFFFFFF);
   double eps = 1e-14;
 
-  w.norm();
   double eita = w.x * w.x + w.y * w.y;
   double alpha = w.z * w.z + eita; // Parabola opens upwards since alpha >= 0.
 
@@ -474,7 +492,7 @@ double SphericalSampler::getSolidDirectionSamples(Vec w, double theta_max, int n
 
 }*/
 
-void SphericalSampler::getDistribution(Vec n, Vec x, int nSamples, Vec *samples) {
+void SphericalSampler::getDistribution(const Vec &n, const Vec &x, const int nSamples, Vec *samples) {
     int *histogramElevation = new int[181]; // 180 degrees
     int *histogramAzmuth = new int[361]; // 360 degrees
     int *histogramRadii = new int[101]; // 100 uniform samples along radius length.
@@ -483,7 +501,6 @@ void SphericalSampler::getDistribution(Vec n, Vec x, int nSamples, Vec *samples)
 
     Vec t = Vec(1,1,1);
     Vec nOrtho = (n%t).norm(); // Vector orthogonal to n. This is our reference for calculating azmuth.
-    n.norm();
 
     int i;
     for (i = 0; i < 181; i++)

@@ -18,18 +18,18 @@ class SphericalSampler {
 
   public:
   // Vec n is direction of normal and Vec x is position of center.
-  static double getSphericalVolumeSamples(Vec x, int nSamples, Vec *store);
-  static double getSphericalSurfaceSamples(Vec x, int nSamples, Vec *store);
-  static double getHemiDirectionSamples(Vec n, int nSamples, Vec *store);
-  static double getHemiDirectionSamplesTrue(Vec n, int nSamples, Vec *store);
-  static double getHemiVolumeSamples(Vec n, Vec x, int nSamples, Vec *store);
-  static double getSolidDirectionSamples(Vec w, double theta_max, int nSamples, Vec *store);
-  static double getLightDirectionSamples(Vec c, double r, Vec x, int nSamples, Vec *store);
+  static double getSphericalVolumeSamples(const Vec &x, const int nSamples, Vec *store);
+  static double getSphericalSurfaceSamples(const Vec &x, const int nSamples, Vec *store);
+  static double getHemiDirectionSamples(const Vec &n, const int nSamples, Vec *store); //Assumes normalized n
+  static double getHemiDirectionSamplesTrue(const Vec &n, const int nSamples, Vec *store); //Assumes normalized n
+  static double getHemiVolumeSamples(const Vec &n, const Vec &x, int nSamples, Vec *store); //Assumes normalized n
+  static double getSolidDirectionSamples(const Vec &w, const double theta_max, const int nSamples, Vec *store); // Assumes normalized w
+  static double getLightDirectionSamples(const Vec &c, const double r, const Vec &x, const int nSamples, Vec *store);
   static double getCosineDirectionSamples(const Vec &n, const int nSamples, Vec *store); // Assumes normalized n.
   static double getClassicPhongDirectionSamples(const Vec &n,const Vec &w, const double e, const int nSamples, Vec *store); // Assumes normalized n, w
   static double getBrdfDirectionSamples(const Vec &n, const Vec &wo, const double alpha, const int nSamples, Vec *store, const BRDFType b); // Assumes normalized n, wo
-  static void getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, uint32_t nSamples, Vec *store);//Area of the domain is simply area of triangle.
-  static void getDistribution(Vec n, Vec x, int nSamples, Vec *samples);
+  static void getTriLightSurfaceSamples(const Vec &p1, const Vec &p2, const Vec &p3, const uint32_t nSamples, Vec *store);//Area of the domain is simply area of triangle.
+  static void getDistribution(const Vec &n, const Vec &x, const int nSamples, Vec *samples);
 };
 
 #endif

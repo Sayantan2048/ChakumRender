@@ -24,7 +24,7 @@ public:
     pList = _pList;
     nPS = nPointSource;
   }
-  uint32_t getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, BasePrimitive *bPtr, Vec *samples, double *weight);
+  uint32_t getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Vec &wo, BasePrimitive * const bPtr, Vec *samples, double *weight);
 };
 extern MIS *lightSampler;
 extern void loadLightSampler();

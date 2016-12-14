@@ -498,7 +498,7 @@ Vec LightSource::getLightFromSphereSources(const Ray &r, const Vec &n, const Vec
     Vec w = sList[j].p.p - x;
     double sinThetaMax = sList[j].p.r/w.length();
     // returns 1/pdf.
-    double pdf = SphericalSampler::getSolidDirectionSamples(w, asin(sinThetaMax), sampleCount, samples);
+    double pdf = SphericalSampler::getSolidDirectionSamples(w.norm(), asin(sinThetaMax), sampleCount, samples);
     //samples[SP_SAMPLES - 1] = x + w.norm();
     for (uint32_t i = 0; i < sampleCount; i++) {
       double d;

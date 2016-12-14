@@ -56,7 +56,7 @@ struct Pdf {
   }
 };
 
-uint32_t MIS::getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, BasePrimitive *bPtr, Vec *samples, double *weight) {
+uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Vec &wo, BasePrimitive* const bPtr, Vec *samples, double *weight) {
     std::vector<Pdf> pdf;
 
     uint32_t offset = 0;
@@ -65,8 +65,8 @@ uint32_t MIS::getSamples(Vec x, Vec n, Vec wo_ref, Vec wo, BasePrimitive *bPtr, 
       Pdf p;
       Vec w = sList[i].p.p - x;
       double sinThetaMax = sList[i].p.r/w.length();
-      double capArea = SphericalSampler::getSolidDirectionSamples(w, asin(sinThetaMax), nSoAnIS, samples + offset);
-      p.lightDir = w.norm();
+      double capArea = SphericalSampler::getSolidDirectionSamples(w.norm(), asin(sinThetaMax), nSoAnIS, samples + offset);
+      p.lightDir = w;
       p.capAreaInv = 1.0/capArea;
       p.cosThetaMax = sqrt(1 - sinThetaMax * sinThetaMax);
       p.x = x;
