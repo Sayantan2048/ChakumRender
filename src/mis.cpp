@@ -4,11 +4,17 @@
 #include <iostream>
 #include "mis.h"
 
+#define USE_SPHERE_SOURCE_LIGHT_SAMPLE 0
+
 MIS *lightSampler;
 
-enum PdfType {SoAnISSP = 0, SuArISSP, SuArISME, CoIS, PhBrIS};
+enum PdfType {SoAnISSP = 0,
+#if USE_SPHERE_SOURCE_LIGHT_SAMPLE
+  SuArISSP,
+#endif
+  SuArISME, SuArISTR, CoIS, PhBrIS};
 
-#define USE_SPHERE_SOURCE_LIGHT_SAMPLE 0
+
 struct Pdf {
   double capAreaInv; // Solid Angle Sampling.
   double cosThetaMax; // Solid Angle Sampling
@@ -17,6 +23,7 @@ struct Pdf {
   SphereSource *sS;
 #endif
   MeshLight *mS;
+  TriLight *tS;
   MaterialType *mPtr;
   Vec x;
   Vec n;
@@ -49,8 +56,19 @@ struct Pdf {
       double d;
       uint32_t dummy;
       Vec n;
-      mS->intersect(r, dummy, d, n);
-      if (d < INF) {
+      if (mS->intersect(r, dummy, d, n)) {
+	double cosine1 = sample.dot(n);
+	cosine1 = cosine1 < 0 ? -cosine1 : cosine1;
+	return (capAreaInv * d * d) / cosine1;
+      }
+      else
+	return 0;
+    }
+    else if (t == SuArISTR) {
+      Ray r(x, sample);
+      double d;
+      Vec n;
+      if ((d = tS->t.intersect(r, n)) < INF) {
 	double cosine1 = sample.dot(n);
 	cosine1 = cosine1 < 0 ? -cosine1 : cosine1;
 	return (capAreaInv * d * d) / cosine1;
@@ -114,6 +132,19 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
       p.N = nSuArIS;
       pdf.push_back(p);
     }
+    for (uint32_t i = 0; i < nTS && nSuArIS > 0; i++, offset += nSuArIS) {
+      Pdf p;
+      SphericalSampler::getTriLightSurfaceSamples(tList[i].t.A, tList[i].t.B, tList[i].t.C, nSuArIS, samples + offset);
+      double capArea = tList[i].t.area;
+      for (uint32_t j = offset; j < offset + nSuArIS; j++)
+	samples[j] = (samples[j] - x).norm();
+      p.tS = &tList[i];
+      p.capAreaInv = 1.0/capArea;
+      p.x = x;
+      p.t = SuArISTR;
+      p.N = nSuArIS;
+      pdf.push_back(p);
+    }
 
     if (nCoIS > 0) {
       Pdf p;
@@ -169,13 +200,15 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
       weight[i] = 1.0/(denom + 1e-20);
     }
 
-    return nSamples;
+    return allSamples;
 }
 
 void loadLightSampler() {
   uint32_t nSS;
   uint32_t nMS;
+  uint32_t nTS;
   SphereSource *sPtr = lSource->getSphereSourcePtr(nSS);
   MeshLight *mPtr = lSource->getMeshLightPtr(nMS);
-  lightSampler = new MIS(nSS, sPtr, nMS, mPtr);
+  TriLight *tPtr = lSource->getTriLightPtr(nTS);
+  lightSampler = new MIS(nSS, sPtr, nMS, mPtr, nTS, tPtr);
 }

@@ -109,6 +109,7 @@ struct TriLight {
   Triangle t;
   Vec radiance;
   TriLight(const Triangle &t_, const Vec rad): t(t_), radiance(rad){}
+  TriLight(){}
 };
 
 struct MeshLight {
@@ -159,7 +160,10 @@ public:
     pList.push_back(p);
   }
   void addESource(const EnvSource &e) {
-    eS.push_back(e);
+    if (eS.size() < 1)
+      eS.push_back(e);
+    else
+      std::cout<<"Already added an Environment Source\n";
   }
   void addTSource(const TriLight &t) {
     tList.push_back(t);
@@ -188,6 +192,14 @@ public:
     MeshLight *ptr = new MeshLight[mList.size()];
     for (uint32_t i = 0; i < mList.size(); i++)
       ptr[i] = mList[i];
+
+    return ptr;
+  }
+  TriLight* getTriLightPtr(uint32_t &nSources) {
+    nSources = tList.size();
+    TriLight *ptr = new TriLight[tList.size()];
+    for (uint32_t i = 0; i < tList.size(); i++)
+      ptr[i] = tList[i];
 
     return ptr;
   }

@@ -67,12 +67,12 @@ void configureLightSources() {
   lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
-
+#define dX (-200)
   MeshLight mesh1;
   mesh1.add(TriLight(
-    Triangle(Vec(130, 200, -800), Vec(-30, 200, -800), Vec(-30, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+    Triangle(Vec(130 + dX, 200, -800), Vec(-30 + dX, 200, -800), Vec(-30 + dX, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   mesh1.add(TriLight(
-    Triangle(Vec(130, 200, -800), Vec(-30, 40, -800), Vec(130, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+    Triangle(Vec(130 + dX, 200, -800), Vec(-30 + dX, 40, -800), Vec(130 + dX, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 
   mesh1.initMeshLight();
   lSource->addMSource(mesh1);
@@ -111,7 +111,8 @@ void configureLightSources() {
   lSource->addTSource(TriLight(
     Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
 */
-
+  lSource->addTSource(TriLight(Triangle(Vec(130, 200, -800), Vec(-30, 200, -800), Vec(-30, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+  lSource->addTSource(TriLight(Triangle(Vec(130, 200, -800), Vec(-30, 40, -800), Vec(130, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 }
 
 #if MESH_SAMPLING_TYPE & 1
@@ -262,6 +263,17 @@ Vec LightSource::getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Ve
 
       hitASource = true;
       sumLight = sumLight +  sList[j].radiance * (cosine * brdf * weight[i]);
+    }
+    for (uint32_t j = 0; j < tList.size() && !hitASource; j++) {
+      Vec dummy;
+      d = tList[j].t.intersect(rr, dummy);
+      if (d >= INF)
+	continue;
+      if (shadow(rr, d) < 0.5)
+	continue;
+
+      hitASource = true;
+      sumLight = sumLight +  tList[j].radiance * (cosine * brdf * weight[i]);
     }
   }
 

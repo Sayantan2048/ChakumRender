@@ -15,16 +15,19 @@ class MIS {
 
   MeshLight *mList; // List of Mesh Sources
   uint32_t nMS; // No. of Mesh Sources
-public:
-  MIS(uint32_t nSphereSource, SphereSource *_sList, uint32_t nMeshSource, MeshLight *_mList) {
-    nSamples = nSoAnIS * nSphereSource + nSuArIS * nSphereSource + nSuArIS * nMeshSource + nCoIS + nPhBrIS;
 
+  TriLight *tList; // List of Triangle Sources
+  uint32_t nTS; // No. of Triangle Sources
+public:
+  MIS(uint32_t nSphereSource, SphereSource *_sList, uint32_t nMeshSource, MeshLight *_mList, uint32_t nTriSource, TriLight *_tList) {
     sList = _sList;
     nSS = nSphereSource;
 
     mList = _mList;
     nMS = nMeshSource;
 
+    tList = _tList;
+    nTS = nTriSource;
   }
   uint32_t getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Vec &wo, BasePrimitive * const bPtr, Vec *samples, double *weight);
 };
