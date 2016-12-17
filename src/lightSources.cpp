@@ -51,31 +51,31 @@ void configureLightSources() {
   //lSource->addSSource(SphereSource(Vec(5.0, 0.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(80, Vec(50, 100, -400), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
-  lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(100, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(100, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //Veach Scene
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(5, Vec(-50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(1, Vec(-150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
-  /*uint32_t w, h;
+  uint32_t w, h;
   Vec *image;
   readImage(image, w, h);
-  lSource->addESource(EnvSource(image, w, h, Vec(1,1,1), 1));
-  delete []image;*/
+  lSource->addESource(EnvSource(image, w, h, Vec(0.8,0.8,0.8), 1));
+  delete []image;
   /*lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(30, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
 #define dX (-200)
-  MeshLight mesh1;
+  /*MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(130 + dX, 200, -800), Vec(-30 + dX, 200, -800), Vec(-30 + dX, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
   mesh1.add(TriLight(
     Triangle(Vec(130 + dX, 200, -800), Vec(-30 + dX, 40, -800), Vec(130 + dX, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);
+  lSource->addMSource(mesh1);*/
 /*
  MeshLight mesh1;
   mesh1.add(TriLight(
@@ -111,8 +111,8 @@ void configureLightSources() {
   lSource->addTSource(TriLight(
     Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
 */
-  lSource->addTSource(TriLight(Triangle(Vec(130, 200, -800), Vec(-30, 200, -800), Vec(-30, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
-  lSource->addTSource(TriLight(Triangle(Vec(130, 200, -800), Vec(-30, 40, -800), Vec(130, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+  //lSource->addTSource(TriLight(Triangle(Vec(130, 200, -800), Vec(-30, 200, -800), Vec(-30, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
+  //lSource->addTSource(TriLight(Triangle(Vec(130, 200, -800), Vec(-30, 40, -800), Vec(130, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 }
 
 #if MESH_SAMPLING_TYPE & 1
@@ -219,13 +219,13 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
 #endif
 
 Vec LightSource::getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
-  if (mList.size() < 1 && sList.size() < 1) return Vec();
+  if (mList.size() < 1 && sList.size() < 1 && eS.size() < 1 && tList.size() < 1) return Vec();
   Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
   double cosine = 0;
   double eps = 1e-08;
-  double brdf = 0;
-  Vec samples[100] = {0};
-  double weight[100] = {0};
+  double throughput = 0;
+  Vec samples[200] = {0};
+  double weight[200] = {0};
 
   Vec sumLight = Vec();
   rr.o = x + n * eps;
@@ -242,7 +242,7 @@ Vec LightSource::getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Ve
 	continue;
     double d;
     bool hitASource = false;
-    brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d);
+    throughput = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d) * cosine * weight[i];
 
     for (uint32_t j = 0; j < mList.size() && !hitASource; j++) {
       uint32_t id;
@@ -252,7 +252,7 @@ Vec LightSource::getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Ve
       if (shadow(rr, d) < 0.5)
 	continue;
       hitASource = true;
-      sumLight = sumLight +  mList[j].mesh[id].radiance * (cosine * brdf * weight[i]);
+      sumLight = sumLight +  mList[j].mesh[id].radiance * throughput;
     }
     for (uint32_t j = 0; j < sList.size() && !hitASource; j++) {
       d = sList[j].p.intersect(rr);
@@ -262,7 +262,7 @@ Vec LightSource::getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Ve
 	continue;
 
       hitASource = true;
-      sumLight = sumLight +  sList[j].radiance * (cosine * brdf * weight[i]);
+      sumLight = sumLight +  sList[j].radiance * throughput;
     }
     for (uint32_t j = 0; j < tList.size() && !hitASource; j++) {
       Vec dummy;
@@ -273,8 +273,11 @@ Vec LightSource::getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Ve
 	continue;
 
       hitASource = true;
-      sumLight = sumLight +  tList[j].radiance * (cosine * brdf * weight[i]);
+      sumLight = sumLight +  tList[j].radiance * throughput;
     }
+    if (eS.size() == 1)
+      if (shadow(rr, INF) > 0.5)
+	sumLight = sumLight + eS[0].getRadiance(rr.d) * throughput;
   }
 
   return sumLight;
