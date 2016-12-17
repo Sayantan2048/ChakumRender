@@ -6,13 +6,17 @@
 
 MIS *lightSampler;
 
-enum PdfType {SoAnISSP = 0, SuArISSP, CoIS, PhBrIS};
+enum PdfType {SoAnISSP = 0, SuArISSP, SuArISME, CoIS, PhBrIS};
 
+#define USE_SPHERE_SOURCE_LIGHT_SAMPLE 0
 struct Pdf {
   double capAreaInv; // Solid Angle Sampling.
   double cosThetaMax; // Solid Angle Sampling
   Vec lightDir; // Solid Angle Sampling
+#if USE_SPHERE_SOURCE_LIGHT_SAMPLE
   SphereSource *sS;
+#endif
+  MeshLight *mS;
   MaterialType *mPtr;
   Vec x;
   Vec n;
@@ -27,6 +31,7 @@ struct Pdf {
       else
 	return 0.;
     }
+#if USE_SPHERE_SOURCE_LIGHT_SAMPLE
     else if (t == SuArISSP) {
       Ray r(x, sample);
       double d;
@@ -38,15 +43,26 @@ struct Pdf {
       else
 	return 0;
     }
+#endif
+    else if (t == SuArISME) {
+      Ray r(x, sample);
+      double d;
+      uint32_t dummy;
+      Vec n;
+      mS->intersect(r, dummy, d, n);
+      if (d < INF) {
+	double cosine1 = sample.dot(n);
+	cosine1 = cosine1 < 0 ? -cosine1 : cosine1;
+	return (capAreaInv * d * d) / cosine1;
+      }
+      else
+	return 0;
+    }
     else if (t == CoIS) {
       return sample.dot(n) * capAreaInv;
     }
-    else if (t == PhBrIS) {/*
-      double cosine = sample.dot(wr);
-      cosine = cosine > 0 ? cosine : 0;
-      return capAreaInv * pow(cosine, e);
-      */
-      // x doubles as wo.
+    else if (t == PhBrIS) {
+
       return mPtr->pdfEval(n, wo_ref, x, sample);
     }
     else {
@@ -74,7 +90,7 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
       p.N = nSoAnIS;
       pdf.push_back(p);
     }
-
+#if USE_SPHERE_SOURCE_LIGHT_SAMPLE
     for (uint32_t i = 0; i < nSS && nSuArIS > 0; i++, offset += nSuArIS) {
       Pdf p;
       double capArea = SphericalSampler::getLightDirectionSamples(sList[i].p.p, sList[i].p.r, x, nSuArIS, samples + offset);
@@ -82,6 +98,19 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
       p.capAreaInv = 1.0/capArea;
       p.x = x;
       p.t = SuArISSP;
+      p.N = nSuArIS;
+      pdf.push_back(p);
+    }
+#endif
+    for (uint32_t i = 0; i < nMS && nSuArIS > 0; i++, offset += nSuArIS) {
+      Pdf p;
+      double capArea = mList[i].getSamples(nSuArIS, samples + offset, NULL);
+      for (uint32_t j = offset; j < offset + nSuArIS; j++)
+	samples[j] = (samples[j] - x).norm();
+      p.mS = &mList[i];
+      p.capAreaInv = 1.0/capArea;
+      p.x = x;
+      p.t = SuArISME;
       p.N = nSuArIS;
       pdf.push_back(p);
     }
@@ -101,8 +130,6 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
     if (nPhBrIS > 0) {
       Pdf p;
       bPtr->m.getBrdfDirectionSamples(n, wo_ref, wo, samples + offset, 0, nPhBrIS);
-      //SphericalSampler::getClassicPhongDirectionSamples(n, wo_ref, bPtr->m.phongExp, nPhBrIS, samples + offset);
-      //p.capAreaInv = (bPtr->m.phongExp + 1.0)/(2 * PI);
       p.wo_ref = wo_ref;
       p.n = n;
       p.x = wo;
@@ -147,6 +174,8 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
 
 void loadLightSampler() {
   uint32_t nSS;
+  uint32_t nMS;
   SphereSource *sPtr = lSource->getSphereSourcePtr(nSS);
-  lightSampler = new MIS(0, 0, nSS, sPtr);
+  MeshLight *mPtr = lSource->getMeshLightPtr(nMS);
+  lightSampler = new MIS(nSS, sPtr, nMS, mPtr);
 }

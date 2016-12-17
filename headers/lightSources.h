@@ -183,6 +183,14 @@ public:
 
     return ptr;
   }
+  MeshLight* getMeshLightPtr(uint32_t &nSources) {
+    nSources = mList.size();
+    MeshLight *ptr = new MeshLight[mList.size()];
+    for (uint32_t i = 0; i < mList.size(); i++)
+      ptr[i] = mList[i];
+
+    return ptr;
+  }
   Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
   Vec getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
@@ -190,6 +198,7 @@ public:
   Vec getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
   Vec getLightFromMeshSource_AnalyticCV(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
   Vec getLightFromMeshSource_Analytic(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
 
   //Experimental
   Vec getLightFromMeshSource_CVAdv(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);

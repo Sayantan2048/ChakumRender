@@ -22,7 +22,7 @@
 #define TRI_SAMPLING_TYPE	2
 
 #define MAX_MESH_SAMPLES	1000 // Should be less than the No. of samples in domainSampler.h
-#define MESH_SAMPLING_TYPE	2
+#define MESH_SAMPLING_TYPE	1
 static double to_greyScale(Vec L);
 LightSource *lSource;
 /*
@@ -51,6 +51,7 @@ void configureLightSources() {
   //lSource->addSSource(SphereSource(Vec(5.0, 0.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(80, Vec(50, 100, -400), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
+  lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(100, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //Veach Scene
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
@@ -66,7 +67,7 @@ void configureLightSources() {
   lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
-/*
+
   MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(130, 200, -800), Vec(-30, 200, -800), Vec(-30, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
@@ -74,8 +75,8 @@ void configureLightSources() {
     Triangle(Vec(130, 200, -800), Vec(-30, 40, -800), Vec(130, 40, -800), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);*/
-
+  lSource->addMSource(mesh1);
+/*
  MeshLight mesh1;
   mesh1.add(TriLight(
     Triangle(Vec(30, 68, 60), Vec(30, 68, 100), Vec(70, 68, 100), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 0)));
@@ -83,7 +84,7 @@ void configureLightSources() {
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 68, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 0, 10)));
 
   mesh1.initMeshLight();
-  lSource->addMSource(mesh1);
+  lSource->addMSource(mesh1);*/
 /*
   MeshLight mesh2;
   Vec A = Vec(30, 68, 60);
@@ -114,6 +115,7 @@ void configureLightSources() {
 }
 
 #if MESH_SAMPLING_TYPE & 1
+
 Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (mList.size() < 1) return Vec();
   const uint32_t sampleCount = nSamples > MAX_MESH_SAMPLES ? MAX_MESH_SAMPLES : nSamples;
@@ -159,6 +161,7 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
   }
   return sumLight;
 }
+
 #else
 Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples) {
   if (mList.size() < 1) return Vec();
@@ -213,6 +216,57 @@ Vec LightSource::getLightFromMeshSources(const Ray &r, const Vec &n, const Vec &
   return sumLight;
 }
 #endif
+
+Vec LightSource::getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+  if (mList.size() < 1 && sList.size() < 1) return Vec();
+  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
+  double cosine = 0;
+  double eps = 1e-08;
+  double brdf = 0;
+  Vec samples[100] = {0};
+  double weight[100] = {0};
+
+  Vec sumLight = Vec();
+  rr.o = x + n * eps;
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
+
+  uint32_t nSamples = lightSampler->getSamples(x, n, wo_ref, r.d * -1.0, primitive, samples, weight);
+
+  for (uint32_t i = 0; i < nSamples; i++) {
+    rr.d = samples[i];
+    cosine = rr.d.dot(n);
+    if (cosine < 0)
+	continue;
+    double d;
+    bool hitASource = false;
+    brdf = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d);
+
+    for (uint32_t j = 0; j < mList.size() && !hitASource; j++) {
+      uint32_t id;
+      Vec dummy;
+      if (!mList[j].intersect(rr, id, d, dummy))
+	continue;
+      if (shadow(rr, d) < 0.5)
+	continue;
+      hitASource = true;
+      sumLight = sumLight +  mList[j].mesh[id].radiance * (cosine * brdf * weight[i]);
+    }
+    for (uint32_t j = 0; j < sList.size() && !hitASource; j++) {
+      d = sList[j].p.intersect(rr);
+      if (d >= INF)
+	continue;
+      if (shadow(rr, d) < 0.5)
+	continue;
+
+      hitASource = true;
+      sumLight = sumLight +  sList[j].radiance * (cosine * brdf * weight[i]);
+    }
+  }
+
+  return sumLight;
+}
 
 Vec LightSource::getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
   if (pList.size() < 1) return Vec();
@@ -886,7 +940,8 @@ double MeshLight::getSamples(uint32_t nSamples, Vec *store, uint32_t *ids) {
 
       index = invCDF[index];
       //index = e > 0.5 ? 0:1;
-      ids[i] = index;
+      if (ids)
+	ids[i] = index;
       store[i] =  mesh[index].t.A * (1.0 - e1) +
 		 mesh[index].t.B * e1 * (1.0 - e2) +
 		 mesh[index].t.C * e2 * e1;

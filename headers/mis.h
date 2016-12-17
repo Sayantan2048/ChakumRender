@@ -5,24 +5,26 @@
 
 class MIS {
   uint32_t nSamples;
-  static const uint32_t nSoAnIS = 20; // No. of samples for solid angle importance sampling.
-  static const uint32_t nSuArIS = 0; // No. of samples for surface area importance sampling.
+  static const uint32_t nSoAnIS = 5; // No. of samples for solid angle importance sampling.
+  static const uint32_t nSuArIS = 5; // No. of samples for surface area importance sampling.
   static const uint32_t nCoIS = 0; // Cosine weighted importance sampling.
-  static const uint32_t nPhBrIS = 0; // No. of phong brdf importance samples.
+  static const uint32_t nPhBrIS = 5; // No. of phong brdf importance samples.
 
   SphereSource *sList; // List of Sphere Sources
   uint32_t nSS; // No. of SphereSources
 
-  PointSource *pList;
-  uint32_t nPS;
-
+  MeshLight *mList; // List of Mesh Sources
+  uint32_t nMS; // No. of Mesh Sources
 public:
-  MIS(uint32_t nPointSource, PointSource *_pList, uint32_t nSphereSource, SphereSource *_sList) {
-    nSamples = nSoAnIS * nSphereSource + nSuArIS * nSphereSource + nCoIS + nPhBrIS + nPointSource;
+  MIS(uint32_t nSphereSource, SphereSource *_sList, uint32_t nMeshSource, MeshLight *_mList) {
+    nSamples = nSoAnIS * nSphereSource + nSuArIS * nSphereSource + nSuArIS * nMeshSource + nCoIS + nPhBrIS;
+
     sList = _sList;
     nSS = nSphereSource;
-    pList = _pList;
-    nPS = nPointSource;
+
+    mList = _mList;
+    nMS = nMeshSource;
+
   }
   uint32_t getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Vec &wo, BasePrimitive * const bPtr, Vec *samples, double *weight);
 };

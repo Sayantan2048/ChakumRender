@@ -8,7 +8,7 @@
 // Assumes wo.dot(n) and wi.dot(n) are positive
 double MaterialType::brdf(const Vec &n, const Vec &wo_ref, const Vec &wo, const Vec &wi, const BRDFApprox &brdfApprox) const {
   if (brdfApprox.isSet)
-    return specularCoef * approxLTC_BRDF(n, wi, brdfApprox.M, brdfApprox.Minv, brdfApprox.amplitude) / n.dot(wi) + (1 - specularCoef) / PI;
+    return specularCoef * approxLTC_BRDF(n, wi, brdfApprox.M, brdfApprox.Minv, brdfApprox.amplitude) / wi.dot(n) + (1 - specularCoef) / PI;
   else if (b == CLASSIC_PHONG) {
     double cosine = wo_ref.dot(wi);
     //cosine > 0?cosine:0
