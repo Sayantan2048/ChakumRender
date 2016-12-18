@@ -74,7 +74,7 @@ struct EnvSource {
       y = direction.y;
       z = direction.z;
     }
-    getThetaPhi(x, y, z, theta, phi); // Wrapped around y axis.
+    getThetaPhi(x, y, z, theta, phi);
     uint32_t col = (phi / (2 * PI)) * width;
     uint32_t row = (theta / PI) * height;
 
@@ -203,6 +203,12 @@ public:
 
     return ptr;
   }
+  EnvSource* getEnvSourcePtr(){
+    if (eS.size() == 1)
+      return &eS[0];
+    else
+      return 0;
+  }
   Vec getLightFromPointSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
   Vec getLightFromSphereSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
   Vec getLightFromTriSources(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
@@ -210,7 +216,11 @@ public:
   Vec getLightFromEnvSource(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
   Vec getLightFromMeshSource_AnalyticCV(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
   Vec getLightFromMeshSource_Analytic(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+
   Vec getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive);
+  Vec getLightFromAllSources_BRDF(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromAllSources_UNIFORM(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
+  Vec getLightFromAllSources_COS(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);
 
   //Experimental
   Vec getLightFromMeshSource_CVAdv(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive, const uint32_t nSamples);

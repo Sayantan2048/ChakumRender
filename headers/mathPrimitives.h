@@ -7,6 +7,7 @@
 #define maX(a, b) ((a) > (b) ? (a) : (b))
 #define miN(a, b) ((a) < (b) ? (a) : (b))
 #define isNotClose(a, b, eps) (fabs(a - b) > eps)
+#define to_greyScale(L) ((L.x * 0.3 + L.y * 0.59 + L.z * 0.11))
 
 struct Vec {
   double x, y, z;

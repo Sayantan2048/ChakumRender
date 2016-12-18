@@ -12,7 +12,7 @@ enum PdfType {SoAnISSP = 0,
 #if USE_SPHERE_SOURCE_LIGHT_SAMPLE
   SuArISSP,
 #endif
-  SuArISME, SuArISTR, CoIS, PhBrIS};
+  SuArISME, SuArISTR, EnMpIS, CoIS, BrIS};
 
 
 struct Pdf {
@@ -24,6 +24,7 @@ struct Pdf {
 #endif
   MeshLight *mS;
   TriLight *tS;
+  EnvSource *eS;
   MaterialType *mPtr;
   Vec x;
   Vec n;
@@ -76,13 +77,16 @@ struct Pdf {
       else
 	return 0;
     }
-    else if (t == CoIS) {
+    else if (t == CoIS)
       return sample.dot(n) * capAreaInv;
-    }
-    else if (t == PhBrIS) {
 
+    else if (t == BrIS)
       return mPtr->pdfEval(n, wo_ref, x, sample);
+    else if (t == EnMpIS) {
+      Vec L = eS->getRadiance(sample);
+      return to_greyScale(L) * capAreaInv;
     }
+
     else {
       std::cerr<<"No Such PDF!!\n";
       return 0;
@@ -132,6 +136,7 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
       p.N = nSuArIS;
       pdf.push_back(p);
     }
+
     for (uint32_t i = 0; i < nTS && nSuArIS > 0; i++, offset += nSuArIS) {
       Pdf p;
       SphericalSampler::getTriLightSurfaceSamples(tList[i].t.A, tList[i].t.B, tList[i].t.C, nSuArIS, samples + offset);
@@ -146,6 +151,20 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
       pdf.push_back(p);
     }
 
+    if(eS != 0 && nEnMpIS > 0) {
+      Pdf p;
+      Random random(clock() & 0xFFFFFFFF);
+      uint32_t e_offset = random.randomMTD(0, (eS[0].multiplier -1) * nEnMpIS);
+      for (uint32_t i = 0; i < nEnMpIS; i++)
+	samples[i + offset] = eS[0].impSamples[i + e_offset];
+      p.eS = eS;
+      p.capAreaInv = 1.0/eS[0].normalizationArea;
+      p.t = EnMpIS;
+      p.N = nEnMpIS;
+      pdf.push_back(p);
+      offset += nEnMpIS;
+    }
+
     if (nCoIS > 0) {
       Pdf p;
       double capArea = SphericalSampler::getCosineDirectionSamples(n, nCoIS, samples + offset);
@@ -158,17 +177,17 @@ uint32_t MIS::getSamples(const Vec &x, const Vec &n, const Vec &wo_ref, const Ve
       offset += nCoIS;
     }
 
-    if (nPhBrIS > 0) {
+    if (nBrIS > 0) {
       Pdf p;
-      bPtr->m.getBrdfDirectionSamples(n, wo_ref, wo, samples + offset, 0, nPhBrIS);
+      bPtr->m.getBrdfDirectionSamples(n, wo_ref, wo, samples + offset, 0, nBrIS);
       p.wo_ref = wo_ref;
       p.n = n;
       p.x = wo;
       p.mPtr = &(bPtr->m);
-      p.t = PhBrIS;
-      p.N = nPhBrIS;
+      p.t = BrIS;
+      p.N = nBrIS;
       pdf.push_back(p);
-      offset += nPhBrIS;
+      offset += nBrIS;
     }
 
 /*
@@ -210,5 +229,6 @@ void loadLightSampler() {
   SphereSource *sPtr = lSource->getSphereSourcePtr(nSS);
   MeshLight *mPtr = lSource->getMeshLightPtr(nMS);
   TriLight *tPtr = lSource->getTriLightPtr(nTS);
-  lightSampler = new MIS(nSS, sPtr, nMS, mPtr, nTS, tPtr);
+  EnvSource *eS = lSource->getEnvSourcePtr(); // No memory allocated, direct pointer returned.
+  lightSampler = new MIS(nSS, sPtr, nMS, mPtr, nTS, tPtr, eS);
 }
