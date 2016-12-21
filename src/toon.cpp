@@ -97,8 +97,8 @@ Vec LightSource::getLightFromMeshSource_CVAdv(const Ray &r, const Vec &n, const 
   double cosine = 0;
   double eps = 1e-08;
   double brdf = 0;
-  Vec samples[sampleCount] = {0};
-  uint32_t ids[sampleCount] = {0};
+  Vec samples[sampleCount];
+  uint32_t ids[sampleCount];
   uint32_t cvConfidence = 1;
 
   Vec sumLight = Vec();
