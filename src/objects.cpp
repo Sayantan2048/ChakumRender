@@ -28,13 +28,11 @@ Sphere *sphereList;
 };*/
 
 uint32_t nTriangles = 0;
-#define X (45)
-#define Y 0
-#define Z (-150)
-#define VA Vec(27 + X, 16.5 + Y, 47 + Z)
-#define VB Vec(59 + X, 16.5 + Y, 99 + Z)
-#define VC Vec(55 + X, 50.5 + Y, 66 + Z)
-#define VD Vec(73 + X, 16.5 + Y, 78 + Z)
+
+#define VA Vec(27, 16.5, 47)
+#define VB Vec(59, 16.5, 99)
+#define VC Vec(55, 50.5, 66)
+#define VD Vec(73, 16.5, 78)
 Triangle * triangleList;
 
 void loadObjects() {
@@ -63,8 +61,31 @@ void loadObjects() {
   //Dummy Triangle
   vTriangleList.push_back(Triangle(VA + 1e6, VB + 1e6, VC + 1e6, Vec(0.0, 0, 0.9), 0.9, MaterialType(1.0, 0.5)));
   //Eric Veach Scene
-  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 100), Vec(5000, -30, 300 - 100), Vec(5000, -30, 200 - 100), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(200000.0, 1)));
-  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 100), Vec(-5000, -30, 200 - 100), Vec(5000, -30, 200 - 100), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(200000.0, 1)));
+  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 100), Vec(5000, -30, 300 - 100), Vec(5000, -30, 200 - 100), Vec(1, 1, 1), 1, MaterialType(0.15, 10000, 1, 1, GGX)));
+  //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 100), Vec(-5000, -30, 200 - 100), Vec(5000, -30, 200 - 100), Vec(1, 1, 1), 1, MaterialType(0.15, 10000, 1, 1, GGX)));
+  
+  //mat3 M = rotate(PI/10);
+  double length = 5000;
+  double width = 100;
+  Vec V1 = Vec(-length, 0, width); 
+  Vec V2 = Vec(length, 0, -width);
+  Vec V3 = Vec(length, 0, width);
+  Vec V4 = Vec(-length, 0, -width);
+  
+  Vec T = Vec(0, -30, -700);
+  mat3 rot = rotate(Vec(1, 0, 0), PI/10);
+  vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V3) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.25, 10000, 1, 1, GGX)));
+  vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V4) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.25, 10000, 1, 1, GGX)));
+  
+  T = Vec(0, -30, 150);
+  rot = rotate(Vec(1, 0, 0), PI/50);
+  vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V3) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.05, 10000, 1, 1, GGX)));
+  vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V4) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.05, 10000, 1, 1, GGX)));
+  
+  T = Vec(0, -30, 250);
+  rot = rotate(Vec(1, 0, 0), 0);
+  vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V3) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.0005, 10000, 1, 1, GGX)));
+  vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V4) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.0005, 10000, 1, 1, GGX)));
   //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 150), Vec(5000, -30, 300 - 150), Vec(5000, -30, 200 - 150), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(20.0, 1)));
   //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 150), Vec(-5000, -30, 200 - 150), Vec(5000, -30, 200 - 150), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(20.0, 1)));
   //vTriangleList.push_back(Triangle(Vec(-5000, -30, 5000 + Z), Vec(5000, -30, 5000 + Z), Vec(5000, -30, -5000 + Z), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(20.0, 1)));
@@ -77,8 +98,8 @@ void loadObjects() {
   //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(400.0, 1)));
   //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(400.0, 1)));
 
-  vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(0.15, 10000, 1, 1, GGX)));
-  vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(0.15, 10000, 1, 1, GGX)));
+  //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(5000, 0, 5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(0.15, 10000, 1, 1, GGX)));
+  //vTriangleList.push_back(Triangle(Vec(-5000, 0, 5000), Vec(-5000, 0, -5000), Vec(5000, 0, -5000), Vec(0.9, 0.9, 0.9), 1.0, MaterialType(0.15, 10000, 1, 1, GGX)));
   /*  objLoader *objData = new objLoader();
   objData->load("Aventador1.obj");
 

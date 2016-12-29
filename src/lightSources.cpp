@@ -28,31 +28,14 @@
 #define MAX_COSINE_SAMPLES	1000 // Should be less than the No. of samples in domainSampler.h
 
 LightSource *lSource;
-/*
-int nPointSources = 0;
-PointSource pSources[] = {
-  //PointSource(Vec(50, 10.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
-  PointSource(Vec(50, 68.6 - .27, 81.6), Vec(80000.0, 80000.0, 80000.0)),
-  PointSource(Vec(50, 40.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
-  PointSource(Vec(50, 28.6 - .27, 81.6), Vec(40000.0, 40000.0, 40000.0)),
-  PointSource(Vec(73, 16.6 - .27, 78), Vec(40000.0, 40000.0, 40000.0))
-};*/
-/*
-int nVolumeSources = 0;
-
-VolumeSource vSources[] = {
- //VolumeSource(Sphere(10, Vec(50, 10.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
- VolumeSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68.6 - .27, 81.6), Vec(.999, .999, .999), 1.0, MaterialType(1.0, 0.5))),
- //VolumeSource(Sphere(10.5, Vec(73, 16.5, 78), Vec(.999, .999, .999), 1.0, lambertian), Vec(0.0, 0.0, 40000.0))
-};*/
 
 void configureLightSources() {
   lSource = new LightSource();
-  lSource->addPSource(PointSource(Vec(350, 100, -400), Vec(1, 1, 1), 40000));
+  //lSource->addPSource(PointSource(Vec(350, 100, -400), Vec(1, 1, 1), 40000));
   //lSource->addSSource(SphereSource(Vec(10.0, 0.0, 0.0), Sphere(10, Vec(20, 40.6 - .27, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(5.0, 0.0, 0.0), Sphere(10, Vec(50, 40.6 - .27, 81.6), Vec(.0, 0.0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(50, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
-  lSource->addSSource(SphereSource(30, Vec(200, 100, -400), 2000, 10));
+  //lSource->addSSource(SphereSource(30, Vec(200, 100, -400), 2000, 10));
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(10, Vec(100, 68, 81.6), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
   //Veach Scene
   //lSource->addSSource(SphereSource(Vec(10.0, 10.0, 10.0), Sphere(20, Vec(150, 68.6 - .27, 0), Vec(.0, .0, .0), 1.0, MaterialType(VOLUME, Vec(0., 0., 0.)))));
@@ -69,13 +52,92 @@ void configureLightSources() {
   lSource->addTSource(TriLight(
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
-#define dX (00)
+  
+  double size = 10;
+  Vec V1 = Vec(size, size, 0);
+  Vec V2 = Vec(-size, -size, 0);
+  Vec V3 = Vec(-size, size, 0);
+  Vec V4 = Vec(size, -size, 0);
+  Vec T = Vec(-400, 250, -800);
   MeshLight mesh1;
-  mesh1.add(TriLight(Vec(130 + dX, 200, -800), Vec(-30 + dX, 200, -800), Vec(-30 + dX, 40, -800), 1000, 10));
-  mesh1.add(TriLight(Vec(130 + dX, 200, -800), Vec(-30 + dX, 40, -800), Vec(130 + dX, 40, -800), 1000, 10));
-
+  mesh1.add(TriLight(V1 + T, V3 + T, V2 + T, 40000, 640));
+  mesh1.add(TriLight(V1 + T, V2 + T, V4 + T, 40000, 640));
   mesh1.initMeshLight();
   lSource->addMSource(mesh1);
+  
+  /*size = 14;
+  V1 = Vec(size, size, 0);
+  V2 = Vec(-size, -size, 0);
+  V3 = Vec(-size, size, 0);
+  V4 = Vec(size, -size, 0);
+  T = Vec(-290, 250, -800);
+  MeshLight mesh2;
+  mesh2.add(TriLight(V1 + T, V3 + T, V2 + T, 20000, 320));
+  mesh2.add(TriLight(V1 + T, V2 + T, V4 + T, 20000, 320));
+  mesh2.initMeshLight();
+  lSource->addMSource(mesh2);*/
+  
+  size = 20;
+  V1 = Vec(size, size, 0);
+  V2 = Vec(-size, -size, 0);
+  V3 = Vec(-size, size, 0);
+  V4 = Vec(size, -size, 0);
+  T = Vec(-176, 250, -800);
+  MeshLight mesh3;
+  mesh3.add(TriLight(V1 + T, V3 + T, V2 + T, 10000, 160));
+  mesh3.add(TriLight(V1 + T, V2 + T, V4 + T, 10000, 160));
+  mesh3.initMeshLight();
+  lSource->addMSource(mesh3);
+  
+  /*size = 29;
+  V1 = Vec(size, size, 0);
+  V2 = Vec(-size, -size, 0);
+  V3 = Vec(-size, size, 0);
+  V4 = Vec(size, -size, 0);
+  T = Vec(-56, 250, -800);
+  MeshLight mesh4;
+  mesh4.add(TriLight(V1 + T, V3 + T, V2 + T, 5000, 80));
+  mesh4.add(TriLight(V1 + T, V2 + T, V4 + T, 5000, 80));
+  mesh4.initMeshLight();
+  lSource->addMSource(mesh4);*/
+  
+  size = 40;
+  V1 = Vec(size, size, 0);
+  V2 = Vec(-size, -size, 0);
+  V3 = Vec(-size, size, 0);
+  V4 = Vec(size, -size, 0);
+  T = Vec(73, 250, -800);
+  MeshLight mesh5;
+  mesh5.add(TriLight(V1 + T, V3 + T, V2 + T, 2500, 40));
+  mesh5.add(TriLight(V1 + T, V2 + T, V4 + T, 2500, 40));
+  mesh5.initMeshLight();
+  lSource->addMSource(mesh5);
+  
+  /*size = 57;
+  V1 = Vec(size, size, 0);
+  V2 = Vec(-size, -size, 0);
+  V3 = Vec(-size, size, 0);
+  V4 = Vec(size, -size, 0);
+  T = Vec(230, 250, -800);
+  MeshLight mesh6;
+  mesh6.add(TriLight(V1 + T, V3 + T, V2 + T, 1250, 20));
+  mesh6.add(TriLight(V1 + T, V2 + T, V4 + T, 1250, 20));
+  mesh6.initMeshLight();
+  lSource->addMSource(mesh6);*/
+  
+  size = 80;
+  V1 = Vec(size, size, 0);
+  V2 = Vec(-size, -size, 0);
+  V3 = Vec(-size, size, 0);
+  V4 = Vec(size, -size, 0);
+  T = Vec(430, 250, -800);
+  MeshLight mesh7;
+  mesh7.add(TriLight(V1 + T, V3 + T, V2 + T, 1000, 10));
+  mesh7.add(TriLight(V1 + T, V2 + T, V4 + T, 1000, 10));
+  mesh7.initMeshLight();
+  lSource->addMSource(mesh7);
+  
+  
 /*
  MeshLight mesh1;
   mesh1.add(TriLight(
@@ -111,10 +173,10 @@ void configureLightSources() {
   lSource->addTSource(TriLight(
     Triangle(A, D, C, Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(0, 0, 10)));
 */
-#undef dX
-#define dX (-100)
-  lSource->addTSource(TriLight(Vec(30 + dX, 200, -800), Vec(-130 + dX, 200, -800), Vec(-130 + dX, 40, -800), 10000, 10));
-  lSource->addTSource(TriLight(Vec(30 + dX, 200, -800), Vec(-130 + dX, 40, -800), Vec(30 + dX, 40, -800), 10000, 10));
+//#undef dX
+//#define dX (-100)
+  //lSource->addTSource(TriLight(Vec(30 + dX, 200, -800), Vec(-130 + dX, 200, -800), Vec(-130 + dX, 40, -800), 10000, 10));
+ // lSource->addTSource(TriLight(Vec(30 + dX, 200, -800), Vec(-130 + dX, 40, -800), Vec(30 + dX, 40, -800), 10000, 10));
 }
 
 Vec LightSource::getLightFromAllSources_MIS(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
