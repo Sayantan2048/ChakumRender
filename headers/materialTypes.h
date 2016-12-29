@@ -25,15 +25,16 @@ class MaterialType {
     double intIOR; //interior IOR(Index of Refraction)
     double extIOR; //exterior IOR
 
-    double alpha; // GGX BRDF roughness
+    double alpha; // GGX/BECKMANN roughness or PHONG smoothness
 
     LightType l;
     Vec radiance;
 
     // Assumes w and n is normalized!!
-    Vec getRadiance(const Vec &n, const Vec &w) {
+    Vec getRadiance(const Vec &n, const Vec &w) const {
       // This is true only for sphere volume sources.
-      return radiance;
+      
+      return Vec(radiance).maxnorm();
     }
     //Dummy Material
     MaterialType() {

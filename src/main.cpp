@@ -22,11 +22,8 @@
 double x_alias[] = {0.34, 0.86, 0.20, 0.86, 0.66, 0.34, 0.20, 0.66};
 double y_alias[] = {0.20, 0.66, 0.66, 0.34, 0.86, 0.86, 0.34, 0.20};
 
-// clamp x between 0 and 1.
-inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
-
 // Clamp pixel values between 0 to 255. 1/2.2 is gamma correction factor!
-inline int toDisplayValue(double x){ return int( pow( clamp(x), 1.0/2.2 ) * 255 + .5); }
+inline int toDisplayValue(double x){ return int( pow( clamp(x, 0.0, 1.0), 1.0/2.2 ) * 255 + .5); }
 
 int main(int argc, char *argv[]) {
   int w = 512, h = 384;
@@ -87,9 +84,9 @@ int main(int argc, char *argv[]) {
     for(int x = 0; x < w; x++ ) {
       int idx = (h - y - 1) * w + x;
       pixelColors[idx] = pixelColors[idx] / (double) MOTIONBLUR;
-      pixelColors[idx].x = clamp(pixelColors[idx].x);
-      pixelColors[idx].y = clamp(pixelColors[idx].y);
-      pixelColors[idx].z = clamp(pixelColors[idx].z);
+      pixelColors[idx].x = clamp(pixelColors[idx].x, 0.0, 1.0);
+      pixelColors[idx].y = clamp(pixelColors[idx].y, 0.0, 1.0);
+      pixelColors[idx].z = clamp(pixelColors[idx].z, 0.0, 1.0);
     }
   }
 

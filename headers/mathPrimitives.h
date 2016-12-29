@@ -8,6 +8,7 @@
 #define miN(a, b) ((a) < (b) ? (a) : (b))
 #define isNotClose(a, b, eps) (fabs(a - b) > eps)
 #define to_greyScale(L) ((L.x * 0.3 + L.y * 0.59 + L.z * 0.11))
+#define clamp(x, min, max) (( (x) < (min) ) ? (min) : ( ((x) > (max)) ? (max) : (x) ))
 
 struct Vec {
   double x, y, z;
@@ -31,6 +32,7 @@ struct Vec {
   Vec& norm();
   // Find the length of a vector.
   double length() const;
+  Vec& maxnorm();
   void show() const;
 };
 
@@ -167,4 +169,6 @@ struct mat3 {
     }
 };
 
+// Convert temperature in range of 1000K to 40000K to RGB.
+extern Vec tempToColor(double temperature);
 #endif

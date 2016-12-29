@@ -7,29 +7,46 @@
 #include <iostream>
 #include <cstring>
 
-struct PointSource {
-  Vec p;
-  Vec power;
-  PointSource(Vec p_, Vec pw_): p(p_), power(pw_){}
-  // At any point x
-  Vec radiance(Vec x) {
-    double sqlen = (p - x).dot(p-x);
-    return power / (4.0 * PI * sqlen);
+struct BaseSource {
+  Vec radiance;
+  BaseSource(const Vec &col, const double &intensity) {
+    Vec color = col;
+    color.maxnorm();
+    radiance = color * intensity;
+  }
+  BaseSource(double temperature, const double &intensity) {
+    radiance = tempToColor(temperature) * intensity;
   }
 };
 
-struct EnvSource {
+struct PointSource: public BaseSource {
+  Vec p;
+  PointSource(Vec p_, const Vec &col, const double &intensity): BaseSource(col, intensity), p(p_){}
+  PointSource(Vec p_, double temperature, const double &intensity): BaseSource(temperature, intensity), p(p_){}
+  // At any point x
+  Vec getRadiance(Vec x) {
+    double sqlen = (p - x).dot(p-x);
+    return radiance / (4.0 * PI * sqlen); // Power to radiance conversion. radiance is the name of variable that stores power!!
+  }
+};
+
+struct EnvSource: public BaseSource {
   Vec *envMap; // takes two coordinate
   uint32_t width;
   uint32_t height;
-  Vec radiance;
   uint32_t axis; // Axis around which image is wrapped
   const static uint32_t nSamples = 2000;
   const static uint32_t multiplier = 100;
   Vec impSamples[nSamples * multiplier]; //bad idea!!
   double normalizationArea;
 
-  EnvSource(Vec *image, uint32_t w, uint32_t h, Vec rad, uint32_t ax): envMap(image), width(w), height(h), radiance(rad), axis(ax) {
+  EnvSource(Vec *image, uint32_t w, uint32_t h, uint32_t ax, const Vec &col, const double &intensity): BaseSource(col, intensity), envMap(image), width(w), height(h), axis(ax) {
+    envMap = new Vec[h * w];
+    memcpy(envMap, image, sizeof(Vec) * h * w);
+
+    initSamples();
+  }
+  EnvSource(Vec *image, uint32_t w, uint32_t h, uint32_t ax, double temperature, const double &intensity): BaseSource(temperature, intensity), envMap(image), width(w), height(h), axis(ax) {
     envMap = new Vec[h * w];
     memcpy(envMap, image, sizeof(Vec) * h * w);
 
@@ -91,25 +108,34 @@ struct EnvSource {
 
 };
 
-struct SphereSource {
-  Vec radiance;
+struct SphereSource : public BaseSource {
   Sphere p; //This sphere is not visible, if you want a visible sphere, put the sphere used in the constructor argument in the object list as well but with slightly smaller radii.
-  Vec power;
-  SphereSource(Sphere p_, Vec pw_): p(p_), power(pw_) {
-    radiance = power / (4 * PI * PI * p.r * p.r);
+  SphereSource(const double &power, double radius, const Vec &center, const Vec &col): BaseSource(col, power) {
+    radiance = radiance / (4 * PI * PI * p.r * p.r); // power to radiance conversion
+    p = Sphere(radius, center, Vec(0,0,0), 0, MaterialType(VOLUME, radiance));
   }
-
-  SphereSource(Vec r_, Sphere p_): radiance(r_), p(p_) {
-    power = radiance * ( 4 * PI * PI * p.r * p.r);
+  SphereSource(const double &power, double radius, const Vec &center, double temperature): BaseSource(temperature, power) {
+    radiance = radiance / (4 * PI * PI * p.r * p.r); // power to radiance conversion
+    p = Sphere(radius, center, Vec(0,0,0), 0, MaterialType(VOLUME, radiance));
   }
-  SphereSource() {}
+  SphereSource(double radius, const Vec &center, const Vec &col, const double &intensity): BaseSource(col, intensity) {
+     p = Sphere(radius, center, Vec(0,0,0), 0, MaterialType(VOLUME, radiance));
+  }
+  SphereSource(double radius, const Vec &center, double temperature, const double &intensity): BaseSource(temperature, intensity) {
+     p = Sphere(radius, center, Vec(0,0,0), 0, MaterialType(VOLUME, radiance));
+  }
+  SphereSource():BaseSource(0, 0) {}
 };
 
-struct TriLight {
+struct TriLight : public BaseSource {
   Triangle t;
-  Vec radiance;
-  TriLight(const Triangle &t_, const Vec rad): t(t_), radiance(rad){}
-  TriLight(){}
+  TriLight(const Vec &A, const Vec &B, const Vec &C, const Vec &col, const double &intensity): BaseSource(col, intensity) {
+    t = Triangle(A, B, C, Vec(0, 0, 0), 0.0,  MaterialType(PLANAR, radiance));
+  }
+  TriLight(const Vec &A, const Vec &B, const Vec &C, double temperature, const double &intensity): BaseSource(temperature, intensity) {
+    t = Triangle(A, B, C, Vec(0, 0, 0), 0.0,  MaterialType(PLANAR, radiance));
+  }
+  TriLight():BaseSource(0,0){}
 };
 
 struct MeshLight {
@@ -152,8 +178,6 @@ public:
   void addSSource(const SphereSource &v) {
     sList.push_back(v);
     Sphere p = v.p;
-    //p.r /= (1 + eps);
-    p.m.radiance = v.radiance;
     vSphereList.push_back(p); // For a visible sphere light.
   }
   void addPSource(const PointSource &p) {
@@ -168,14 +192,12 @@ public:
   void addTSource(const TriLight &t) {
     tList.push_back(t);
     Triangle tt = t.t;
-    tt.m.radiance = t.radiance;
     vTriangleList.push_back(tt);
   }
   void addMSource(const MeshLight &m) {
     mList.push_back(m);
     for (uint32_t i = 0; i < m.mesh.size(); i++) {
       Triangle tt = m.mesh[i].t;
-      tt.m.radiance = m.mesh[i].radiance;
       vTriangleList.push_back(tt);
     }
   }
