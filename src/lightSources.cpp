@@ -53,12 +53,12 @@ void configureLightSources() {
     Triangle(Vec(30, 68, 60), Vec(70, 68, 100), Vec(70, 80, 60), Vec(0, 0, 0), 1.0, MaterialType(PLANAR, Vec(0., 0., 0.))), Vec(10, 10, 10)));
 */
   
-  double size = 10;
+  double size = 20;
   Vec V1 = Vec(size, size, 0);
   Vec V2 = Vec(-size, -size, 0);
   Vec V3 = Vec(-size, size, 0);
   Vec V4 = Vec(size, -size, 0);
-  Vec T = Vec(-400, 250, -800);
+  Vec T = Vec(-600, 180, -1600);
   MeshLight mesh1;
   mesh1.add(TriLight(V1 + T, V3 + T, V2 + T, 40000, 640));
   mesh1.add(TriLight(V1 + T, V2 + T, V4 + T, 40000, 640));
@@ -77,12 +77,12 @@ void configureLightSources() {
   mesh2.initMeshLight();
   lSource->addMSource(mesh2);*/
   
-  size = 20;
+  size = 40;
   V1 = Vec(size, size, 0);
   V2 = Vec(-size, -size, 0);
   V3 = Vec(-size, size, 0);
   V4 = Vec(size, -size, 0);
-  T = Vec(-176, 250, -800);
+  T = Vec(-306, 180, -1600);
   MeshLight mesh3;
   mesh3.add(TriLight(V1 + T, V3 + T, V2 + T, 10000, 160));
   mesh3.add(TriLight(V1 + T, V2 + T, V4 + T, 10000, 160));
@@ -101,12 +101,12 @@ void configureLightSources() {
   mesh4.initMeshLight();
   lSource->addMSource(mesh4);*/
   
-  size = 40;
+  size = 80;
   V1 = Vec(size, size, 0);
   V2 = Vec(-size, -size, 0);
   V3 = Vec(-size, size, 0);
   V4 = Vec(size, -size, 0);
-  T = Vec(73, 250, -800);
+  T = Vec(20, 180, -1600);
   MeshLight mesh5;
   mesh5.add(TriLight(V1 + T, V3 + T, V2 + T, 2500, 40));
   mesh5.add(TriLight(V1 + T, V2 + T, V4 + T, 2500, 40));
@@ -125,12 +125,12 @@ void configureLightSources() {
   mesh6.initMeshLight();
   lSource->addMSource(mesh6);*/
   
-  size = 80;
+  size = 160;
   V1 = Vec(size, size, 0);
   V2 = Vec(-size, -size, 0);
   V3 = Vec(-size, size, 0);
   V4 = Vec(size, -size, 0);
-  T = Vec(430, 250, -800);
+  T = Vec(430, 180, -1600);
   MeshLight mesh7;
   mesh7.add(TriLight(V1 + T, V3 + T, V2 + T, 1000, 10));
   mesh7.add(TriLight(V1 + T, V2 + T, V4 + T, 1000, 10));

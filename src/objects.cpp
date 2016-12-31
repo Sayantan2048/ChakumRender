@@ -66,24 +66,36 @@ void loadObjects() {
   
   //mat3 M = rotate(PI/10);
   double length = 5000;
-  double width = 100;
+  double width = 600;
   Vec V1 = Vec(-length, 0, width); 
   Vec V2 = Vec(length, 0, -width);
   Vec V3 = Vec(length, 0, width);
   Vec V4 = Vec(-length, 0, -width);
   
-  Vec T = Vec(0, -30, -700);
-  mat3 rot = rotate(Vec(1, 0, 0), PI/10);
+  Vec T = Vec(0, -60, -1150);
+  mat3 rot = rotate(Vec(1, 0, 0), PI/5 * 0);
   vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V3) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.25, 10000, 1, 1, GGX)));
   vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V4) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.25, 10000, 1, 1, GGX)));
   
-  T = Vec(0, -30, 150);
-  rot = rotate(Vec(1, 0, 0), PI/50);
+  T = Vec(0, -60, -200);
+  rot = rotate(Vec(1, 0, 0), -PI/80);
+  length = 5000;
+  width = 200;
+  V1 = Vec(-length, 0, width); 
+  V2 = Vec(length, 0, -width);
+  V3 = Vec(length, 0, width);
+  V4 = Vec(-length, 0, -width);
   vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V3) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.05, 10000, 1, 1, GGX)));
   vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V4) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.05, 10000, 1, 1, GGX)));
   
   T = Vec(0, -30, 250);
-  rot = rotate(Vec(1, 0, 0), 0);
+  rot = rotate(Vec(1, 0, 0), -PI/30);
+  length = 5000;
+  width = 200;
+  V1 = Vec(-length, 0, width); 
+  V2 = Vec(length, 0, -width);
+  V3 = Vec(length, 0, width);
+  V4 = Vec(-length, 0, -width);
   vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V3) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.0005, 10000, 1, 1, GGX)));
   vTriangleList.push_back(Triangle(rot.mul(V1) + T, rot.mul(V4) + T, rot.mul(V2) + T, Vec(1, 1, 1), 1, MaterialType(0.0005, 10000, 1, 1, GGX)));
   //vTriangleList.push_back(Triangle(Vec(-5000, -30, 300 - 150), Vec(5000, -30, 300 - 150), Vec(5000, -30, 200 - 150), Vec(0.9, 0.9, 0.9), 0.9, MaterialType(20.0, 1)));

@@ -34,13 +34,13 @@ int main(int argc, char *argv[]) {
   loadLightSampler();
   //Ray camera( Vec(50, 50, 275.0), Vec(0, -0.05, -1).norm());
   //Vec cx = Vec( w * 0.57735 / h, 0., 0.1); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
-  Ray camera( Vec(50, 40, 275.0 * 2.0), Vec(0, 0, -1).norm());
-  Vec cx = Vec( w * 0.57735 / h, 0., 0.0); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
+  //Ray camera( Vec(50, 40, 275.0 * 2.0), Vec(0, 0, -1).norm());
+  //Vec cx = Vec( w * 0.57735 / h, 0., 0.0); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
   //Veach
   // camera location and direction of looking. Imagine right direction is x, up is y, and z is out of screen. Camera is mostly looking towards -z direction!!
-  //Ray camera( Vec(50 * 0, 50 * 4, 275.0 * 2), Vec(0, -0.05 * 10, -1).norm());
+  Ray camera( Vec(50 * 0, 50 * 2, 275.0 * 2), Vec(0, -0.05 * 3, -1).norm());
   //Define pixel pitch along width of the screen. Field of view is 30 + 30 or 60 degrees.
-  //Vec cx = Vec( w * 0.57735 / h, 0., 0.1 * 0); // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
+  Vec cx = Vec(1.0, 0.0, 0).norm() * ((double)w/h) * 0.57735; // hint : tan( 30 / 180.0 * M_PI ) == 0.57735
   //Define pixel pitch along height of the screen.
   Vec cy = (cx % camera.d).norm() * 0.57735;
   // 2D Array of pixels
