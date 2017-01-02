@@ -14,7 +14,6 @@ extern Triangle *triangleList;
 extern std::vector<Sphere> vSphereList;
 extern std::vector<Triangle> vTriangleList;
 
-extern void loadObjects();
 extern void loadAccels();
 
 #endif

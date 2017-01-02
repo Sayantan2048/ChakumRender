@@ -249,6 +249,5 @@ public:
 };
 
 extern LightSource *lSource;
-extern void configureLightSources();
 
 #endif

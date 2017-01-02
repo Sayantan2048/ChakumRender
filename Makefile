@@ -4,16 +4,18 @@ CFLAGS = -Wall -fopenmp
 ROOT=$(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
 INCLUDES = $(ROOT)/headers
-INCLUDEC = -I$(INCLUDES) -I$(ROOT)/externLib/objectLoader
+INCLUDEC = -I$(INCLUDES) -I$(ROOT)/externLib/objectLoader -I$(ROOT)/externLib/XMLParser
 SRC = $(ROOT)/src
 OBJ = $(ROOT)/src
 
 #make will look for files in these path apart from current location of makefile
-VPATH = $(SRC) $(INCLUDES) $(OBJ) $(ROOT)/externLib/sharedLib $(ROOT)/externLib/objectLoader
+VPATH = $(SRC) $(INCLUDES) $(OBJ) $(ROOT)/externLib/sharedLib $(ROOT)/externLib/objectLoader $(ROOT)/externLib/XMLParser
 
-main: domainSampler.o mathPrimitives.o random.o main.o materialTypes.o geometryPrimitives.o objects.o shader.o lightSources.o lightSources_CV.o toon.o transformations.o dummyAccel.o bvhAccel.o mis.o ppm.o libobjLoader.so.1.0.1
+#-Wl,-R,$(ROOT)/ is to suggest linker to look into $(ROOT) at runtime for loading dynamic libraries.
+main: domainSampler.o mathPrimitives.o random.o main.o materialTypes.o geometryPrimitives.o objects.o shader.o lightSources.o lightSources_CV.o toon.o transformations.o dummyAccel.o bvhAccel.o mis.o ppm.o sceneParser.o prepareScene.o libobjLoader.so.1.0.1 libXMLParser.so.1.0.1
 	$(CC) $(CFLAGS) $(OBJ)/domainSampler.o $(OBJ)/mathPrimitives.o $(OBJ)/random.o $(OBJ)/materialTypes.o $(OBJ)/geometryPrimitives.o $(OBJ)/objects.o $(OBJ)/shader.o $(OBJ)/lightSources.o \
-	$(OBJ)/transformations.o $(OBJ)/dummyAccel.o $(OBJ)/bvhAccel.o $(OBJ)/mis.o $(OBJ)/toon.o $(OBJ)/lightSources_CV.o $(OBJ)/ppm.o $(OBJ)/main.o -L$(ROOT)/externLib/sharedLib/ -lobjLoader
+	$(OBJ)/transformations.o $(OBJ)/dummyAccel.o $(OBJ)/bvhAccel.o $(OBJ)/mis.o $(OBJ)/toon.o $(OBJ)/lightSources_CV.o $(OBJ)/ppm.o $(OBJ)/sceneParser.o $(OBJ)/prepareScene.o $(OBJ)/main.o \
+	-L$(ROOT)/externLib/sharedLib/ -lXMLParser -lobjLoader -Wl,-R,$(ROOT)/ 
 
 main.o: main.cpp
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/main.cpp -o $(OBJ)/main.o
@@ -62,6 +64,21 @@ mis.o: mis.cpp mis.h
 
 ppm.o: ppm.cpp ppm.h
 	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/ppm.cpp -o $(OBJ)/ppm.o
+	
+sceneParser.o: sceneParser.cpp sceneParser.h
+	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/sceneParser.cpp -o $(OBJ)/sceneParser.o
+
+prepareScene.o: prepareScene.cpp prepareScene.h
+	$(CC) $(CFLAGS) $(INCLUDEC) -O -c $(SRC)/prepareScene.cpp -o $(OBJ)/prepareScene.o
+
+libXMLParser.so.1.0.1: tinyxml2.o
+	-mkdir $(ROOT)/externLib/sharedLib
+	$(CC) $(CFLAGS) -shared -Wl,-soname,libXMLParser.so.1 -o $(ROOT)/externLib/sharedLib/libXMLParser.so.1.0.1  $(ROOT)/externLib/XMLParser/tinyxml2.o
+	ln -s $(ROOT)/externLib/sharedLib/libXMLParser.so.1.0.1 $(ROOT)/libXMLParser.so.1
+	ln -s $(ROOT)/externLib/sharedLib/libXMLParser.so.1.0.1 $(ROOT)/externLib/sharedLib/libXMLParser.so
+
+tinyxml2.o: tinyxml2.cpp tinyxml2.h
+	$(CC) -I$(ROOT)/externLib/XMLParser -c -fPIC $(ROOT)/externLib/XMLParser/tinyxml2.cpp -o $(ROOT)/externLib/XMLParser/tinyxml2.o
 
 libobjLoader.so.1.0.1: objLoader.o list.o objParser.o stringExtra.o
 	-mkdir $(ROOT)/externLib/sharedLib
@@ -81,8 +98,7 @@ objParser.o: objParser.cpp objParser.h
 
 stringExtra.o: stringExtra.cpp stringExtra.h
 	$(CC) -I$(ROOT)/externLib/objectLoader -c -fPIC $(ROOT)/externLib/objectLoader/stringExtra.cpp -o $(ROOT)/externLib/objectLoader/stringExtra.o
-
-
+	
 .PHONY: clean cleanall
 
 clean:
@@ -92,6 +108,7 @@ clean:
 cleanall:
 	-cd $(OBJ) && rm *.o
 	-cd $(ROOT)/externLib/objectLoader && rm *.o
+	-cd $(ROOT)/externLib/XMLParser && rm *.o
 	-cd $(ROOT)/externLib/sharedLib/ && rm *.*
 	-cd $(ROOT) && rm *.so.*
 	-cd $(ROOT) && rm *.so
