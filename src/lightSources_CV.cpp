@@ -1,5 +1,6 @@
 #include "lightSources.h"
 #include "shader.h"
+#include "mis.h"
 #include <cmath>
 
 #define MAX_MESH_SAMPLES 1000 // Should be less than the No. of samples in domainSampler.h
@@ -351,7 +352,7 @@ Vec LightSource::getLightFromMeshSource_AnalyticCV(const Ray &r, const Vec &n, c
   primitive->m.getBrdfApproxParam(n, r.d * -1.0, brdfApprox, true);
 
   Vec G = getLightAnalytic(r, n, x, primitive, brdfApprox) * brdfApprox.amplitude * primitive->m.specularCoef;
-  G = G + getLightAnalyticDiffuse(r, n, x, primitive) * (1 - primitive->m.specularCoef);
+  G = G + getLightAnalyticDiffuse(r, n, x, primitive) * (1.0 - primitive->m.specularCoef);
 
   for (uint32_t j = 0; j < mList.size(); j++) {
     Vec sum;
@@ -384,9 +385,67 @@ Vec LightSource::getLightFromMeshSource_AnalyticCV(const Ray &r, const Vec &n, c
       brdfApproximate = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, brdfApprox);
       sum = sum +  mList[j].mesh[ids[i]].radiance * ((visibility * brdfActual- brdfApproximate) * cosine * cosine1 / (d * d));
     }
+    if (sum.x < 0 || sum.y < 0 || sum.z < 0) {
+      sum.show();
+      std::cout<<std::endl;
+    }
     sumLight = sumLight + (sum * (pdf/sampleCount));
-
-    sumLight = sumLight + G;
   }
+  sumLight = sumLight + G;
+  
   return sumLight;
 }
+
+Vec LightSource::getLightFromMeshSource_Analytic_MISCV(const Ray &r, const Vec &n, const Vec &x, BasePrimitive *primitive) {
+  if (mList.size() < 1) return Vec();
+  
+  Ray rr(0,0); // a ray from point toward random direction in hemispherical domain.
+  double cosine = 0;
+  double eps = 1e-08;
+
+  Vec samples[200] = {0};
+  double weights[200] = {0};
+
+  Vec sumLight = Vec();
+  rr.o = x + n * eps;
+
+  Vec wo_ref =  n * 2.0 * (n.dot(r.d * -1.0)) + r.d;
+  wo_ref.norm();
+
+  BRDFApprox brdfApprox;
+  primitive->m.getBrdfApproxParam(n, r.d * -1.0, brdfApprox, true);
+
+  Vec G = getLightAnalytic(r, n, x, primitive, brdfApprox) * brdfApprox.amplitude * primitive->m.specularCoef;
+  G = G + getLightAnalyticDiffuse(r, n, x, primitive) * (1.0 - primitive->m.specularCoef);
+  
+  uint32_t nSamples = lightSampler->getSamples(x, n, wo_ref, r.d * -1.0, primitive, samples, weights);
+  for (uint32_t i = 0; i < nSamples; i++) {
+    rr.d = samples[i];
+    cosine = rr.d.dot(n);
+    if (cosine < 0)
+	continue;
+    
+    bool hitASource = false;
+    
+    for (uint32_t j = 0; j < mList.size() && !hitASource; j++) {
+      uint32_t id;
+      double d;
+      Vec dummy;
+      double visibility = 1;
+      if (!mList[j].intersect(rr, id, d, dummy))
+	continue;
+      if (shadow(rr, d) < 0.5)
+	visibility = 1;
+      
+      hitASource = true;
+      double brdfActual = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d);
+      double brdfApproximate = primitive->brdf(n, wo_ref, r.d * -1.0, rr.d, brdfApprox);
+      sumLight = sumLight +  mList[j].mesh[id].radiance * ((visibility * brdfActual- brdfApproximate) * cosine * weights[i]);
+    }
+  }
+
+  sumLight = sumLight + G;
+  
+  return sumLight;
+}
+

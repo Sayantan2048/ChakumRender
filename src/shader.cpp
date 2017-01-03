@@ -102,7 +102,9 @@ inline Vec shadeDI(const Ray &r,const Vec &x, const Vec &N, BasePrimitive *list)
 	lSource->getLightFromSphereSources(r, N, x, list, 20) + lSource->getLightFromEnvSource(r, N, x, list, 100)
 	+ lSource->getLightFromTriSources(r, N, x, list, 20) + lSource->getLightFromMeshSources(r, N, x, list, 80);*/
   //Vec light = lSource->getLightFromMeshSource_Analytic(r, N, x, list);
-  Vec light = lSource->getLightFromAllSources_MIS(r, N, x, list);
+  //Vec light = lSource->getLightFromMeshSource_AnalyticCV(r, N, x, list, 25);
+  //Vec light = lSource->getLightFromAllSources_MIS(r, N, x, list);
+  Vec light = lSource->getLightFromMeshSource_Analytic_MISCV(r, N, x, list);
   return list->c.mult(light); // Compute color of intersection.
 }
 
